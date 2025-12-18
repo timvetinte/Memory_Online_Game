@@ -9,7 +9,7 @@ import java.util.Collections;
 
 public class GUI extends JFrame implements ActionListener {
 
-    private JPanel gamePanel;
+    JPanel gamePanel;
     static int totalTiles = 16;
     int correctSelections = 0;
     public static int side = (int) Math.sqrt(totalTiles);
@@ -17,6 +17,7 @@ public class GUI extends JFrame implements ActionListener {
     int currentIndex = -1;
     static boolean buttonLock = false;
     private Client client;
+    boolean yourTurn;
 
     static ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
@@ -117,14 +118,14 @@ public class GUI extends JFrame implements ActionListener {
 
                     //Reveals the text or symbol of click
                     setButtonSymbolText(button, index);
-
                     //Locks player out of making any further moves for 850 ms
                     buttonLock = true;
-                    Timer t = new Timer(850, e -> {
+                    Timer t = new Timer(1000, e -> {
 
                         //Sets both to blank again
                         buttonList.get(index).setText(null);
                         buttonList.get(currentIndex).setText(null);
+
 
                         //Sets it to first click again
                         first = true;
@@ -149,7 +150,7 @@ public class GUI extends JFrame implements ActionListener {
         if(reveal) {
             setButtonSymbolText(button, index);
         } else {
-            button.setText(cardList.get(index).getSymbol());
+            button.setText(null);
         }
     }
 
@@ -192,7 +193,11 @@ public class GUI extends JFrame implements ActionListener {
         winWindow.setVisible(true);
 
         positive.addActionListener(e -> {
-            resetGame();
+            try {
+                client.sendOb(1);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
             winWindow.dispose();
         });
         negative.addActionListener(e -> winWindow.dispose());
@@ -285,6 +290,14 @@ public class GUI extends JFrame implements ActionListener {
             totalTiles = 64;
             applyDifficulty.run();
         });
+    }
+
+    public void setColorBorder(boolean yourTurn){
+        if (yourTurn){
+
+        } else {
+
+        }
     }
 
 

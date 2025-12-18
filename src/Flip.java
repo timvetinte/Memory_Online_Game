@@ -5,15 +5,15 @@ public class Flip implements Serializable {
     private int index;
     private int currentIndex;
     private boolean correct;
-    boolean first;
+    boolean flipBack;
 
 
 
-    public Flip(int index, int currentIndex, boolean correct, boolean first){
+    public Flip(int index, int currentIndex, boolean correct, boolean flipBack){
         this.index=index;
         this.currentIndex=currentIndex;
         this.correct=correct;
-        this.first=first;
+        this.flipBack =flipBack;
     }
 
     public int getIndex() {
@@ -28,7 +28,7 @@ public class Flip implements Serializable {
         return correct;
     }
 
-    public boolean first() {
-        return first;
+    public boolean flipBack() {
+        return flipBack;
     }
 }

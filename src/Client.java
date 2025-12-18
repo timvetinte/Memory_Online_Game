@@ -1,11 +1,11 @@
 
-import java.io.EOFException;
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 
 public class Client {
@@ -35,13 +35,12 @@ public class Client {
             }).start();
 
 
-
         } catch (IOException e) {
             System.out.println("GAME CLOSING...");
         }
     }
 
-    public void listenLoop(ObjectOutputStream out,ObjectInputStream in) throws IOException, ClassNotFoundException {
+    public void listenLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
             if (msg instanceof String) {
@@ -54,31 +53,46 @@ public class Client {
                 gui.flipTile(gui.buttonList.get(index), index, true);
                 gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, true);
 
-                if(flip.isCorrect()){
+                if (flip.isCorrect()) {
                     gui.disable(index, flip.getCurrentIndex());
-
-                    gui.flipTile(gui.buttonList.get(index), index, false);
-                    gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, false);
                     System.out.println(flip.getIndex());
                     System.out.println(flip.getCurrentIndex());
                 } else {
 
+                    Timer t = new Timer(850, e -> {
+
+                        gui.flipTile(gui.buttonList.get(index), index, false);
+                        gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, false);
+
+                    });
+                    t.setRepeats(false);
+                    t.start();
+
+
                 }
             }
-            if (msg instanceof Select select){
+            if (msg instanceof Select select) {
                 System.out.println(select.getIndex());
                 int index = select.getIndex();
                 System.out.println("FLIPPED TILE");
                 gui.flipTile(gui.buttonList.get(index), index, true);
             }
-            if (msg instanceof Lock){
-                if(GUI.buttonLock){
-                    GUI.buttonLock=false;
-                } else {
-                    GUI.buttonLock=true;
+            if (msg instanceof Action.sendAction action) {
+                switch (action) {
+                    case LOCK -> {
+                        GUI.buttonLock = true;
+                        gui.cards.setBackground(null);
+                    }
+                    case UNLOCK -> {
+
+                        GUI.buttonLock = false;
+                        gui.cards.setBackground(Color.ORANGE);
+                    }
+                    case WIN -> gui.showWinWindow();
+                    case RESET -> gui.resetGame();
                 }
             }
-            if (msg instanceof ArrayList<?> list){
+            if (msg instanceof ArrayList<?> list) {
                 GUI.cardList = (ArrayList<tiles>) list;
             }
         }
@@ -91,7 +105,6 @@ public class Client {
     public void setGUI(GUI gui) {
         this.gui = gui;
     }
-
 
 
     public static void main(String[] args) {
