@@ -16,6 +16,7 @@ public class Client {
     private ObjectInputStream in;
     private GUI gui;
     int currentIndex;
+    static Flip flip1;
 
 
     public Client() {
@@ -48,17 +49,27 @@ public class Client {
                 out.flush();
             }
             if (msg instanceof Flip flip) {
-                if(flip.first()) {
-                    System.out.println(flip.getIndex());
-                    int index = flip.getIndex();
-                    System.out.println("FLIPPED TILE");
-                    gui.flipTile(gui.buttonList.get(index), index, true);
-                    int currentIndex = flip.getIndex();
-                }
+                int index = flip.getIndex();
+                int currentIndex = flip.getCurrentIndex();
+                gui.flipTile(gui.buttonList.get(index), index, true);
+                gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, true);
+
                 if(flip.isCorrect()){
-                    int index = flip.getIndex();
-                    gui.disable(index, currentIndex);
+                    gui.disable(index, flip.getCurrentIndex());
+
+                    gui.flipTile(gui.buttonList.get(index), index, false);
+                    gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, false);
+                    System.out.println(flip.getIndex());
+                    System.out.println(flip.getCurrentIndex());
+                } else {
+
                 }
+            }
+            if (msg instanceof Select select){
+                System.out.println(select.getIndex());
+                int index = select.getIndex();
+                System.out.println("FLIPPED TILE");
+                gui.flipTile(gui.buttonList.get(index), index, true);
             }
             if (msg instanceof Lock){
                 if(GUI.buttonLock){

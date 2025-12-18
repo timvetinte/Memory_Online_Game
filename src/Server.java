@@ -75,11 +75,13 @@ public class Server {
                     while (true) {
                         Object flip1 = in1.readObject();
                         out2.writeObject(flip1);
+                        System.out.println(flip1.getClass());
                         Flip flip2 = (Flip) in1.readObject();
                         if (flip2.isCorrect()) {
                             out2.writeObject(flip2);
                             System.out.println(flip2.getIndex());
                             System.out.println(flip2.getCurrentIndex());
+                            player1Score++;
                             correctSelections++;
                             break;
                         }

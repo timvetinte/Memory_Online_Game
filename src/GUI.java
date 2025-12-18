@@ -80,7 +80,7 @@ public class GUI extends JFrame implements ActionListener {
                 currentIndex = index;
 
                 //Sends an object for it to be flipped for the other player
-                client.sendOb(new Flip(index, -1,false, true));
+                client.sendOb(new Select(index));
 
                 //Sets so next click is not the first
                 first = false;
@@ -107,7 +107,7 @@ public class GUI extends JFrame implements ActionListener {
 
                     //Sends the click or flip, doesn't update the other players to be disabled
                     //NEEDS TO BE FIXED
-                    client.sendOb(new Flip(index, currentIndex,true, true));
+                    client.sendOb(new Flip(index, currentIndex,true, false));
 
                     //WIN CHECKER, SHOULD BE MOVED SERVERSIDE
                     if (correctSelections == totalTiles / 2) showWinWindow();
@@ -153,7 +153,7 @@ public class GUI extends JFrame implements ActionListener {
         }
     }
 
-    public void setButtonSymbolText(JButton button, int index) {
+    public static void setButtonSymbolText(JButton button, int index) {
         button.setText(cardList.get(index).getSymbol());
     }
 
