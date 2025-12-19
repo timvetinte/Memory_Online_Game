@@ -10,9 +10,8 @@ import java.util.Collections;
 public class GUI extends JFrame implements ActionListener {
 
     JPanel gamePanel;
-    static int totalTiles = 16;
+    static int totalTiles = 0;
     int correctSelections = 0;
-    public static int side = (int) Math.sqrt(totalTiles);
     boolean first = true;
     int currentIndex = -1;
     static boolean buttonLock = false;
@@ -29,21 +28,19 @@ public class GUI extends JFrame implements ActionListener {
     public GUI(Client client) {
 
         this.client = client;
-        initGame();
+
     }
 
-    private void initGame() {
+    void initGame(int totalTiles) {
+        int side = (int) Math.sqrt(totalTiles);
         gamePanel = new JPanel(new BorderLayout());
         this.setResizable(false);
         cards.setLayout(new GridLayout(side, side));
         gamePanel.add(cards, BorderLayout.CENTER);
-        addButtons();
 
         JButton settingsButton = new JButton("Settings");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
         settingsButton.addActionListener(e -> showSettingWindow());
-
-        populateField();
 
         setContentPane(gamePanel);
         setTitle("Memory");
@@ -110,8 +107,6 @@ public class GUI extends JFrame implements ActionListener {
                     //NEEDS TO BE FIXED
                     client.sendOb(new Flip(index, currentIndex,true, false));
 
-                    //WIN CHECKER, SHOULD BE MOVED SERVERSIDE
-                    if (correctSelections == totalTiles / 2) showWinWindow();
 
                     //Player doesnt make correct selection
                 } else {
@@ -158,14 +153,6 @@ public class GUI extends JFrame implements ActionListener {
         button.setText(cardList.get(index).getSymbol());
     }
 
-    public void populateField() {
-        cardList.clear();
-        for (int i = 0; i < totalTiles / 2; i++) cardList.add(new tiles(i));
-        cardList.addAll(cardList);
-        Collections.shuffle(cardList);
-        repaint();
-        revalidate();
-    }
 
     public void disable(int index, int currentIndex){
         buttonList.get(index).setEnabled(false);
@@ -200,7 +187,17 @@ public class GUI extends JFrame implements ActionListener {
             }
             winWindow.dispose();
         });
-        negative.addActionListener(e -> winWindow.dispose());
+        negative.addActionListener(e ->
+        {
+            try {
+                client.sendOb(0);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            winWindow.dispose();
+
+        });
     }
 
     public void resetGame() {
@@ -208,11 +205,16 @@ public class GUI extends JFrame implements ActionListener {
         buttonList.clear();
         correctSelections = 0;
         first = true;
+        currentIndex = -1;  // Add this
         buttonLock = false;
-        addButtons();
-        populateField();
-        repaint();
-        revalidate();
+
+        // Recalculate grid layout
+        int side = (int) Math.sqrt(totalTiles);
+        cards.setLayout(new GridLayout(side, side));
+
+
+        cards.repaint();
+        cards.revalidate();
     }
 
     public void showSettingWindow() {
@@ -247,10 +249,9 @@ public class GUI extends JFrame implements ActionListener {
             correctSelections = 0;
             first = true;
             buttonLock = false;
-            side = (int) Math.sqrt(totalTiles);
-            cards.setLayout(new GridLayout(side, side));
+            //side = (int) Math.sqrt(totalTiles);
+            //cards.setLayout(new GridLayout(side, side));
             addButtons();
-            populateField();
             setContentPane(gamePanel);
             revalidate();
             repaint();
@@ -290,14 +291,6 @@ public class GUI extends JFrame implements ActionListener {
             totalTiles = 64;
             applyDifficulty.run();
         });
-    }
-
-    public void setColorBorder(boolean yourTurn){
-        if (yourTurn){
-
-        } else {
-
-        }
     }
 
 

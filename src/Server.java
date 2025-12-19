@@ -51,41 +51,54 @@ public class Server {
              ObjectOutputStream out2 = new ObjectOutputStream(player2.getOutputStream());
              ObjectInputStream in1 = new ObjectInputStream(player1.getInputStream());
              ObjectInputStream in2 = new ObjectInputStream(player2.getInputStream())) {
-            populateField();
-            out1.writeObject(cardList);
-            out2.writeObject(cardList);
 
-            out2.writeObject(Action.sendAction.LOCK);
+
 
             while (true) {
+                correctSelections = 0;
+
+                populateField();
+
+                out1.reset();
+                out1.writeObject(totalTiles);
+                out1.writeObject(cardList);
+                out1.writeObject(Action.sendAction.UNLOCK);
+                out1.flush();
+
+                out2.reset();
+                out2.writeObject(totalTiles);
+                out2.writeObject(cardList);
+                out2.writeObject(Action.sendAction.LOCK);
+                out2.flush();
 
 
-                while (correctSelections < GUI.totalTiles / 2) {
+
+                while (correctSelections < totalTiles / 2) {
 
 
                     while (true) {
                         Object flip1 = in1.readObject();
                         out2.writeObject(flip1);
-                        System.out.println(flip1.getClass());
+
                         Flip flip2 = (Flip) in1.readObject();
                         if (flip2.isCorrect()) {
                             out2.writeObject(flip2);
-                            System.out.println(flip2.getIndex());
-                            System.out.println(flip2.getCurrentIndex());
+
                             player1Score++;
                             correctSelections++;
-                            System.out.println(correctSelections);
+                            System.out.println(correctSelections + " " + "correct selection");
                             break;
                         }
                         out2.writeObject(flip2);
 
                     }
-                    System.out.println("DET FUNKADE");
 
 
                     out1.writeObject(Action.sendAction.LOCK);
                     out2.writeObject(Action.sendAction.UNLOCK);
-                    System.out.println("SHOULD UNLOCK HERE");
+
+                    if (correctSelections == totalTiles / 2) {
+                        break;}
 
 
 
@@ -94,12 +107,11 @@ public class Server {
                     while (true) {
                         Object flip1 = in2.readObject();
                         out1.writeObject(flip1);
-                        System.out.println(flip1.getClass());
+
                         Flip flip2 = (Flip) in2.readObject();
                         if (flip2.isCorrect()) {
                             out1.writeObject(flip2);
-                            System.out.println(flip2.getIndex());
-                            System.out.println(flip2.getCurrentIndex());
+
                             player2Score++;
                             correctSelections++;
                             System.out.println(correctSelections + " " + "correct selection");
@@ -108,21 +120,27 @@ public class Server {
                         out1.writeObject(flip2);
 
                     }
-                    System.out.println("DETFUNKADE");
+
                     out2.writeObject(Action.sendAction.LOCK);
                     out1.writeObject(Action.sendAction.UNLOCK);
-                    System.out.println("SHOULD UNLOCK HERE");
 
 
+                    if (correctSelections == totalTiles / 2) {
+                        break;}
 
                 }
                 while (true) {
-                    correctSelections = 0;
+
                     out1.writeObject(Action.sendAction.WIN);
                     out2.writeObject(Action.sendAction.WIN);
-                    playAgain = playAgain + (int) in1.readObject();
-                    playAgain = playAgain + (int) in2.readObject();
+                    int p1 = (int) in1.readObject();
+                    int p2 = (int) in2.readObject();
+                    playAgain = p1 + p2;
                     if (playAgain == 2) {
+                        playAgain = 0;
+
+                        out1.writeObject(Action.sendAction.RESET);
+                        out2.writeObject(Action.sendAction.RESET);
                         break;
                     }
                 }

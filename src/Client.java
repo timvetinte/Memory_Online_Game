@@ -15,9 +15,9 @@ public class Client {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private GUI gui;
-    int currentIndex;
-    static Flip flip1;
 
+    private int totalTiles = 0;
+    private boolean firstGame = true;
 
     public Client() {
         try {
@@ -43,6 +43,16 @@ public class Client {
     public void listenLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
+            if (msg instanceof Integer tiles) {
+                this.totalTiles = tiles;
+                GUI.totalTiles = tiles;
+
+                if (firstGame) {
+
+                    gui.initGame(tiles);
+                    firstGame = false;
+                }
+            }
             if (msg instanceof String) {
                 System.out.println(msg);
                 out.flush();
@@ -55,8 +65,7 @@ public class Client {
 
                 if (flip.isCorrect()) {
                     gui.disable(index, flip.getCurrentIndex());
-                    System.out.println(flip.getIndex());
-                    System.out.println(flip.getCurrentIndex());
+
                 } else {
 
                     Timer t = new Timer(850, e -> {
@@ -72,9 +81,9 @@ public class Client {
                 }
             }
             if (msg instanceof Select select) {
-                System.out.println(select.getIndex());
+
                 int index = select.getIndex();
-                System.out.println("FLIPPED TILE");
+
                 gui.flipTile(gui.buttonList.get(index), index, true);
             }
             if (msg instanceof Action.sendAction action) {
@@ -89,11 +98,16 @@ public class Client {
                         gui.cards.setBackground(Color.ORANGE);
                     }
                     case WIN -> gui.showWinWindow();
-                    case RESET -> gui.resetGame();
+                    case RESET ->
+                        gui.resetGame();
                 }
             }
             if (msg instanceof ArrayList<?> list) {
+                gui.cards.removeAll();
                 GUI.cardList = (ArrayList<tiles>) list;
+                gui.addButtons();
+                gui.cards.revalidate();
+                gui.cards.repaint();
             }
         }
     }
