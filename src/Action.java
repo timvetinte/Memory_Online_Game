@@ -2,11 +2,14 @@ import java.io.Serializable;
 
 public class Action implements Serializable {
 
-    public static enum sendAction{
+    public enum sendAction {
         LOCK,
         UNLOCK,
         WIN,
-        RESET,
-    }
+        RESET;
 
+        int scoreP1;
+        int scoreP2;
+
+    }
 }

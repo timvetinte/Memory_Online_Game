@@ -109,6 +109,9 @@ public class Client {
                 gui.cards.revalidate();
                 gui.cards.repaint();
             }
+            if(msg instanceof Score score){
+                gui.setScoreText(score.getP1Score(), score.getP2Score());
+            }
         }
     }
 

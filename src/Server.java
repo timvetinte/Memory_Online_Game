@@ -84,9 +84,13 @@ public class Server {
                         if (flip2.isCorrect()) {
                             out2.writeObject(flip2);
 
+
                             player1Score++;
                             correctSelections++;
                             System.out.println(correctSelections + " " + "correct selection");
+
+                            out1.writeObject(new Score(player1Score, player2Score));
+                            out2.writeObject(new Score(player1Score, player2Score));
                             break;
                         }
                         out2.writeObject(flip2);
@@ -115,6 +119,8 @@ public class Server {
                             player2Score++;
                             correctSelections++;
                             System.out.println(correctSelections + " " + "correct selection");
+                            out1.writeObject(new Score(player1Score, player2Score));
+                            out2.writeObject(new Score(player1Score, player2Score));
                             break;
                         }
                         out1.writeObject(flip2);
@@ -130,6 +136,8 @@ public class Server {
 
                 }
                 while (true) {
+                    out1.writeObject(new Score(0, 0));
+                    out2.writeObject(new Score(0, 0));
 
                     out1.writeObject(Action.sendAction.WIN);
                     out2.writeObject(Action.sendAction.WIN);
@@ -152,13 +160,6 @@ public class Server {
         }
     }
 
-    public int getPlayer2Score() {
-        return player2Score;
-    }
-
-    public int getPlayer1Score() {
-        return player1Score;
-    }
 
     public void populateField() {
         cardList.clear();
@@ -168,8 +169,8 @@ public class Server {
     }
 
 
-    public void main(String[] args) {
-        Server server = new Server();
+    void main() {
+        new Server();
 
     }
 

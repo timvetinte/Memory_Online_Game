@@ -5,22 +5,24 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+
 
 public class GUI extends JFrame implements ActionListener {
 
     JPanel gamePanel;
+    JPanel sideBar;
+
     static int totalTiles = 0;
     int correctSelections = 0;
     boolean first = true;
     int currentIndex = -1;
     static boolean buttonLock = false;
     private Client client;
-    boolean yourTurn;
+    JLabel scoreText = new JLabel("No score yet");
+
 
     static ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
-
 
 
     JPanel cards = new JPanel();
@@ -34,9 +36,22 @@ public class GUI extends JFrame implements ActionListener {
     void initGame(int totalTiles) {
         int side = (int) Math.sqrt(totalTiles);
         gamePanel = new JPanel(new BorderLayout());
+        sideBar = new JPanel(new BorderLayout());
+
         this.setResizable(false);
         cards.setLayout(new GridLayout(side, side));
+
+        // Set preferred size on the CARDS panel (the game board)
+        cards.setPreferredSize(new Dimension(450, 450)); // Square game board
+
         gamePanel.add(cards, BorderLayout.CENTER);
+        gamePanel.add(sideBar, BorderLayout.EAST);
+
+        // Set preferred size for sidebar (width only, height will match)
+        sideBar.setPreferredSize(new Dimension(200, 0));
+        sideBar.setBackground(Color.LIGHT_GRAY); // Optional: to see it better
+
+        sideBar.add(scoreText, BorderLayout.NORTH); // Specify position
 
         JButton settingsButton = new JButton("Settings");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
@@ -44,7 +59,9 @@ public class GUI extends JFrame implements ActionListener {
 
         setContentPane(gamePanel);
         setTitle("Memory");
-        setSize(450, 500);
+
+        pack();
+        setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
@@ -105,7 +122,7 @@ public class GUI extends JFrame implements ActionListener {
 
                     //Sends the click or flip, doesn't update the other players to be disabled
                     //NEEDS TO BE FIXED
-                    client.sendOb(new Flip(index, currentIndex,true, false));
+                    client.sendOb(new Flip(index, currentIndex, true, false));
 
 
                     //Player doesnt make correct selection
@@ -127,7 +144,7 @@ public class GUI extends JFrame implements ActionListener {
                         try {
 
                             //Sends the click
-                            client.sendOb(new Flip(index, currentIndex,false, true));
+                            client.sendOb(new Flip(index, currentIndex, false, true));
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -141,8 +158,8 @@ public class GUI extends JFrame implements ActionListener {
         }
     }
 
-    public void flipTile(JButton button, int index, boolean reveal){
-        if(reveal) {
+    public void flipTile(JButton button, int index, boolean reveal) {
+        if (reveal) {
             setButtonSymbolText(button, index);
         } else {
             button.setText(null);
@@ -154,7 +171,7 @@ public class GUI extends JFrame implements ActionListener {
     }
 
 
-    public void disable(int index, int currentIndex){
+    public void disable(int index, int currentIndex) {
         buttonList.get(index).setEnabled(false);
         buttonList.get(currentIndex).setEnabled(false);
     }
@@ -293,6 +310,10 @@ public class GUI extends JFrame implements ActionListener {
         });
     }
 
+    public void setScoreText(int a, int b) {
+        scoreText.setText("p1:" + a + " p2:" + b);
+    }
+
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -304,10 +325,6 @@ public class GUI extends JFrame implements ActionListener {
         Client client2 = new Client();
         gui.setClient(client2);
         client2.setGUI(gui);
-    }
-
-    public ArrayList<JButton> getButtonList() {
-        return buttonList;
     }
 
     public void setClient(Client client) {
