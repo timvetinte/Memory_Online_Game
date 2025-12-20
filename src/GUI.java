@@ -18,8 +18,10 @@ public class GUI extends JFrame implements ActionListener {
     int currentIndex = -1;
     static boolean buttonLock = false;
     private Client client;
-    JLabel scoreText = new JLabel("<html>Player 1: 0 <br>Player 2: 0<html>");
+    JLabel scoreText = new JLabel("<html>Player 1: 0 points<br>Player 2: 0 points<html> ");
+    JTextArea chat = new JTextArea();
 
+    private String userId = "Player" + (int)(Math.random() * 1000);
 
 
     static ArrayList<tiles> cardList = new ArrayList<>();
@@ -39,6 +41,9 @@ public class GUI extends JFrame implements ActionListener {
         gamePanel = new JPanel(new BorderLayout());
         sideBar = new JPanel(new BorderLayout());
 
+        chat.setEditable(false);
+        JTextField enterMessage = new JTextField();
+
         this.setResizable(false);
         cards.setLayout(new GridLayout(side, side));
 
@@ -53,10 +58,23 @@ public class GUI extends JFrame implements ActionListener {
 
 
         sideBar.add(scoreText, BorderLayout.NORTH);
+        sideBar.add(chat, BorderLayout.CENTER);
+        sideBar.add(enterMessage, BorderLayout.SOUTH);
+
+
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
         JButton settingsButton = new JButton("Settings");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
+        enterMessage.addActionListener( e -> {
+                String message = enterMessage.getText();
+            try {
+                sendMessage(userId, message);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            enterMessage.setText(null);
+        });
         settingsButton.addActionListener(e -> showSettingWindow());
 
         setContentPane(gamePanel);
@@ -185,6 +203,7 @@ public class GUI extends JFrame implements ActionListener {
         JPanel text = new JPanel(new BorderLayout());
         winWindow.setResizable(false);
         JLabel startNew = new JLabel("", SwingConstants.CENTER);
+        winWindow.setLocationRelativeTo(cards);
 
         switch (scenario) {
             case 1 ->
@@ -323,7 +342,13 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void setScoreText(int a, int b) {
-        scoreText.setText("<html>Player 1: " + a + "<br>Player 2:" + b +"<html> ");
+        scoreText.setText("<html>Player 1: " + a + " points<br>Player 2: " + b +" points<html> ");
+    }
+
+    public void sendMessage(String userName, String chatMessage) throws IOException {
+        String sendsThis = userName + ": " + chatMessage + "\n";
+        chat.append(sendsThis);
+        client.sendChatMessage(new Message(sendsThis));
     }
 
 

@@ -12,26 +12,46 @@ public class Client {
 
     String hostname = "127.0.0.1";
     int port = 5432;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+    int chatPort = 5433;
+
     private GUI gui;
 
     private int p1Score;
     private int p2Score;
+
+    private ObjectOutputStream gameOut;
+    private ObjectOutputStream chatOut;
+
+    private ObjectInputStream gameIn;
+    private ObjectInputStream chatIn;
+
 
     private int totalTiles = 0;
     private boolean firstGame = true;
 
     public Client() {
         try {
-            Socket adressSocket = new Socket(hostname, port);
+            Socket gameSocket = new Socket(hostname, port);
+            Socket chatSocket = new Socket(hostname, chatPort);
 
-            this.out = new ObjectOutputStream(adressSocket.getOutputStream());
-            this.in = new ObjectInputStream(adressSocket.getInputStream());
+            this.gameOut = new ObjectOutputStream(gameSocket.getOutputStream());
+            this.chatOut = new ObjectOutputStream(chatSocket.getOutputStream());
+
+
+            this.gameIn = new ObjectInputStream(gameSocket.getInputStream());
+            this.chatIn = new ObjectInputStream(chatSocket.getInputStream());
 
             new Thread(() -> {
                 try {
-                    listenLoop(this.out, this.in);
+                    listenLoop(gameOut, gameIn);
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }).start();
+
+            new Thread(() -> {
+                try {
+                    chatLoop(chatOut, chatIn);
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -46,8 +66,6 @@ public class Client {
     public void listenLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
-
-
 
             if (msg instanceof Integer tiles) {
                 this.totalTiles = tiles;
@@ -69,19 +87,28 @@ public class Client {
                 gui.flipTile(gui.buttonList.get(index), index, true);
                 gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, true);
 
+                /*
+
+                Timer t1 = new Timer(300, e -> {
+
+                });
+                t1.setRepeats(false);
+                t1.start();
+                */
+
                 if (flip.isCorrect()) {
                     gui.disable(index, flip.getCurrentIndex());
 
                 } else {
 
-                    Timer t = new Timer(850, e -> {
+                    Timer t2 = new Timer(850, e -> {
 
                         gui.flipTile(gui.buttonList.get(index), index, false);
                         gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, false);
 
                     });
-                    t.setRepeats(false);
-                    t.start();
+                    t2.setRepeats(false);
+                    t2.start();
 
 
                 }
@@ -125,8 +152,24 @@ public class Client {
         }
     }
 
+    public void chatLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+        while (true) {
+            Object msg = in.readObject();
+
+            if(msg instanceof Message){
+                String chatMessage = ((Message) msg).getChatMessage();
+                gui.chat.append(chatMessage);
+            }
+        }
+    }
+
     public void sendOb(Object o) throws IOException {
-        out.writeObject(o);
+        gameOut.writeObject(o);
+    }
+
+    public void sendChatMessage(Message msg) throws IOException {
+        chatOut.writeObject(msg);
+        chatOut.flush();
     }
 
     public void setGUI(GUI gui) {
