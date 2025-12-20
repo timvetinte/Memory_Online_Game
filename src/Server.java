@@ -1,6 +1,4 @@
 import java.util.Collections;
-import java.util.Properties;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -17,6 +15,8 @@ public class Server {
     int player2Score = 0;
 
     int playAgain = 0;
+
+    int nextScore = 5;
 
     int correctSelections = 0;
     int totalTiles = 16;
@@ -53,9 +53,10 @@ public class Server {
              ObjectInputStream in2 = new ObjectInputStream(player2.getInputStream())) {
 
 
-
             while (true) {
                 correctSelections = 0;
+                player1Score = 0;
+                player2Score = 0;
 
                 populateField();
 
@@ -72,7 +73,6 @@ public class Server {
                 out2.flush();
 
 
-
                 while (correctSelections < totalTiles / 2) {
 
 
@@ -85,13 +85,18 @@ public class Server {
                             out2.writeObject(flip2);
 
 
-                            player1Score++;
+                            player1Score = player1Score + nextScore;
                             correctSelections++;
                             System.out.println(correctSelections + " " + "correct selection");
 
                             out1.writeObject(new Score(player1Score, player2Score));
                             out2.writeObject(new Score(player1Score, player2Score));
+                            nextScore = 5;
                             break;
+                        } else {
+                            if (nextScore > 1) {
+                                nextScore--;
+                            }
                         }
                         out2.writeObject(flip2);
 
@@ -102,8 +107,8 @@ public class Server {
                     out2.writeObject(Action.sendAction.UNLOCK);
 
                     if (correctSelections == totalTiles / 2) {
-                        break;}
-
+                        break;
+                    }
 
 
                     //HÄR BYTER SPELAREN
@@ -116,12 +121,17 @@ public class Server {
                         if (flip2.isCorrect()) {
                             out1.writeObject(flip2);
 
-                            player2Score++;
+                            player2Score = player2Score + nextScore;
                             correctSelections++;
                             System.out.println(correctSelections + " " + "correct selection");
                             out1.writeObject(new Score(player1Score, player2Score));
                             out2.writeObject(new Score(player1Score, player2Score));
+                            nextScore = 5;
                             break;
+                        } else {
+                            if (nextScore > 1) {
+                                nextScore--;
+                            }
                         }
                         out1.writeObject(flip2);
 
@@ -132,15 +142,23 @@ public class Server {
 
 
                     if (correctSelections == totalTiles / 2) {
-                        break;}
+                        break;
+                    }
 
                 }
                 while (true) {
-                    out1.writeObject(new Score(0, 0));
-                    out2.writeObject(new Score(0, 0));
 
-                    out1.writeObject(Action.sendAction.WIN);
-                    out2.writeObject(Action.sendAction.WIN);
+                    if (player1Score > player2Score) {
+                        out1.writeObject(Action.sendAction.WIN);
+                        out2.writeObject(Action.sendAction.LOSE);
+                    } else if (player2Score > player1Score) {
+                        out2.writeObject(Action.sendAction.WIN);
+                        out1.writeObject(Action.sendAction.LOSE);
+                    } else {
+                        out1.writeObject(Action.sendAction.DRAW);
+                        out2.writeObject(Action.sendAction.DRAW);
+                    }
+
                     int p1 = (int) in1.readObject();
                     int p2 = (int) in2.readObject();
                     playAgain = p1 + p2;
@@ -149,6 +167,8 @@ public class Server {
 
                         out1.writeObject(Action.sendAction.RESET);
                         out2.writeObject(Action.sendAction.RESET);
+                        out1.writeObject(new Score(0, 0));
+                        out2.writeObject(new Score(0, 0));
                         break;
                     }
                 }

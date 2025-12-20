@@ -16,6 +16,9 @@ public class Client {
     private ObjectInputStream in;
     private GUI gui;
 
+    private int p1Score;
+    private int p2Score;
+
     private int totalTiles = 0;
     private boolean firstGame = true;
 
@@ -43,6 +46,9 @@ public class Client {
     public void listenLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
+
+
+
             if (msg instanceof Integer tiles) {
                 this.totalTiles = tiles;
                 GUI.totalTiles = tiles;
@@ -97,20 +103,24 @@ public class Client {
                         GUI.buttonLock = false;
                         gui.cards.setBackground(Color.ORANGE);
                     }
-                    case WIN -> gui.showWinWindow();
+                    case WIN -> gui.showWinWindow(1);
+                    case LOSE -> gui.showWinWindow(2);
+                    case DRAW -> gui.showWinWindow(3);
                     case RESET ->
                         gui.resetGame();
                 }
             }
             if (msg instanceof ArrayList<?> list) {
                 gui.cards.removeAll();
-                GUI.cardList = (ArrayList<tiles>) list;
+                gui.cardList = (ArrayList<tiles>) list;
                 gui.addButtons();
                 gui.cards.revalidate();
                 gui.cards.repaint();
             }
             if(msg instanceof Score score){
                 gui.setScoreText(score.getP1Score(), score.getP2Score());
+                p1Score = score.getP1Score();
+                p2Score = score.getP2Score();
             }
         }
     }

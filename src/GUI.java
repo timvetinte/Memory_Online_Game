@@ -18,7 +18,8 @@ public class GUI extends JFrame implements ActionListener {
     int currentIndex = -1;
     static boolean buttonLock = false;
     private Client client;
-    JLabel scoreText = new JLabel("No score yet");
+    JLabel scoreText = new JLabel("<html>Player 1: 0 <br>Player 2: 0<html>");
+
 
 
     static ArrayList<tiles> cardList = new ArrayList<>();
@@ -41,17 +42,18 @@ public class GUI extends JFrame implements ActionListener {
         this.setResizable(false);
         cards.setLayout(new GridLayout(side, side));
 
-        // Set preferred size on the CARDS panel (the game board)
+
         cards.setPreferredSize(new Dimension(450, 450)); // Square game board
 
         gamePanel.add(cards, BorderLayout.CENTER);
         gamePanel.add(sideBar, BorderLayout.EAST);
 
-        // Set preferred size for sidebar (width only, height will match)
-        sideBar.setPreferredSize(new Dimension(200, 0));
-        sideBar.setBackground(Color.LIGHT_GRAY); // Optional: to see it better
 
-        sideBar.add(scoreText, BorderLayout.NORTH); // Specify position
+        sideBar.setPreferredSize(new Dimension(200, 0));
+
+
+        sideBar.add(scoreText, BorderLayout.NORTH);
+        scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
         JButton settingsButton = new JButton("Settings");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
@@ -176,13 +178,24 @@ public class GUI extends JFrame implements ActionListener {
         buttonList.get(currentIndex).setEnabled(false);
     }
 
-    public void showWinWindow() {
+    public void showWinWindow(int scenario) {
 
         JFrame winWindow = new JFrame();
         JPanel buttons = new JPanel();
         JPanel text = new JPanel(new BorderLayout());
         winWindow.setResizable(false);
-        JLabel startNew = new JLabel("YOU WON! New Game?", SwingConstants.CENTER);
+        JLabel startNew = new JLabel("", SwingConstants.CENTER);
+
+        switch (scenario) {
+            case 1 ->
+                startNew.setText("YOU WON! Play again?");
+
+        case 2 ->
+                startNew.setText("You lost. Play again?");
+         case 3 ->
+                startNew.setText("Draw... Play again?");
+            }
+
         JButton positive = new JButton("Yes");
         JButton negative = new JButton("No");
         winWindow.add(text, BorderLayout.NORTH);
@@ -222,10 +235,10 @@ public class GUI extends JFrame implements ActionListener {
         buttonList.clear();
         correctSelections = 0;
         first = true;
-        currentIndex = -1;  // Add this
+        currentIndex = -1;
         buttonLock = false;
 
-        // Recalculate grid layout
+
         int side = (int) Math.sqrt(totalTiles);
         cards.setLayout(new GridLayout(side, side));
 
@@ -266,8 +279,7 @@ public class GUI extends JFrame implements ActionListener {
             correctSelections = 0;
             first = true;
             buttonLock = false;
-            //side = (int) Math.sqrt(totalTiles);
-            //cards.setLayout(new GridLayout(side, side));
+
             addButtons();
             setContentPane(gamePanel);
             revalidate();
@@ -311,7 +323,7 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void setScoreText(int a, int b) {
-        scoreText.setText("p1:" + a + " p2:" + b);
+        scoreText.setText("<html>Player 1: " + a + "<br>Player 2:" + b +"<html> ");
     }
 
 

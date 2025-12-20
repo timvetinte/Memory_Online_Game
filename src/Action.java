@@ -6,6 +6,8 @@ public class Action implements Serializable {
         LOCK,
         UNLOCK,
         WIN,
+        LOSE,
+        DRAW,
         RESET;
 
         int scoreP1;
