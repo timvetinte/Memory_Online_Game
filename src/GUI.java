@@ -57,7 +57,7 @@ public class GUI extends JFrame implements ActionListener {
         gamePanel.add(sideBar, BorderLayout.EAST);
 
 
-        sideBar.setPreferredSize(new Dimension(200, 0));
+        sideBar.setPreferredSize(new Dimension(300, 0));
 
 
         sideBar.add(scoreText, BorderLayout.NORTH);
@@ -154,6 +154,13 @@ public class GUI extends JFrame implements ActionListener {
                     setButtonSymbolText(button, index);
                     //Locks player out of making any further moves for 850 ms
                     buttonLock = true;
+                    try {
+
+                        //Sends the click
+                        client.sendOb(new Flip(index, currentIndex, false, true));
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     Timer t = new Timer(1000, e -> {
 
                         //Sets both to blank again
@@ -163,13 +170,7 @@ public class GUI extends JFrame implements ActionListener {
 
                         //Sets it to first click again
                         first = true;
-                        try {
 
-                            //Sends the click
-                            client.sendOb(new Flip(index, currentIndex, false, true));
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
                         //Removes the lock
                         buttonLock = false;
                     });
@@ -222,7 +223,7 @@ public class GUI extends JFrame implements ActionListener {
         userWindow.add(textFieldPanel, BorderLayout.CENTER);
         userWindow.add(buttonPanel, BorderLayout.SOUTH);
 
-        userWindow.pack();
+        userWindow.setSize(400, 200);
         userWindow.setVisible(true);
 
         userDialogue.addActionListener(e -> {

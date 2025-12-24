@@ -23,15 +23,15 @@ public class Server {
     int nextScore = 5;
 
     int correctSelections = 0;
-    int totalTiles = 16;
+    int totalTiles = 36;
+
 
     ArrayList<tiles> cardList = new ArrayList<>();
 
     public Server() {
 
-
         try (ServerSocket serverSocketGame = new ServerSocket(gamePort);
-        ServerSocket serverSocketChat = new ServerSocket(chatPort)) {
+             ServerSocket serverSocketChat = new ServerSocket(chatPort)) {
 
             while (true) {
                 System.out.println("Waiting for player 1");
@@ -44,30 +44,35 @@ public class Server {
                 Socket player1Chat = serverSocketChat.accept();
                 Socket player2Chat = serverSocketChat.accept();
 
+                ObjectOutputStream chatOut1 = new ObjectOutputStream(player1Chat.getOutputStream());
+                ObjectOutputStream chatOut2 = new ObjectOutputStream(player2Chat.getOutputStream());
+                ObjectInputStream chatIn1 = new ObjectInputStream(player1Chat.getInputStream());
+                ObjectInputStream chatIn2 = new ObjectInputStream(player2Chat.getInputStream());
+
                 System.out.println("Starting Game...");
-                new Thread(() -> startGameServer(player1, player2)).start();
-                new Thread(() -> handleChat(player1Chat, player2Chat)).start();
+                new Thread(() -> startGameServer(player1, player2, chatOut1, chatOut2)).start();
+                new Thread(() -> {
+                    try {
+                        handleChat(chatOut1, chatOut2, chatIn1, chatIn2);
+                    } catch (InterruptedException e) {
+                        System.out.println("GAME CLOSED " + e);
+                    }
+                }).start();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void handleChat(Socket player1Chat, Socket player2Chat) {
-        try (ObjectOutputStream out1 = new ObjectOutputStream(player1Chat.getOutputStream());
-             ObjectOutputStream out2 = new ObjectOutputStream(player2Chat.getOutputStream());
-             ObjectInputStream in1 = new ObjectInputStream(player1Chat.getInputStream());
-             ObjectInputStream in2 = new ObjectInputStream(player2Chat.getInputStream())) {
+    private void handleChat(ObjectOutputStream out1, ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2) throws InterruptedException {
 
-            new Thread(() -> messageReceiver(in1, out2)).start();
-            new Thread(() -> messageReceiver(in2, out1)).start();
-            Thread.sleep(Long.MAX_VALUE);
+        new Thread(() -> messageReceiver(in1, out2)).start();
+        new Thread(() -> messageReceiver(in2, out1)).start();
+        Thread.sleep(Long.MAX_VALUE);
 
-
-        } catch (IOException | InterruptedException e) {
-            System.out.println("Chat connection closed");
-        }
     }
+
+
 
     private void messageReceiver(ObjectInputStream in, ObjectOutputStream out) {
         try {
@@ -84,7 +89,7 @@ public class Server {
     }
 
 
-private void startGameServer(Socket player1, Socket player2) {
+private void startGameServer(Socket player1, Socket player2, ObjectOutputStream chatOut1, ObjectOutputStream chatOut2) {
 
     try (ObjectOutputStream out1 = new ObjectOutputStream(player1.getOutputStream());
          ObjectOutputStream out2 = new ObjectOutputStream(player2.getOutputStream());
@@ -148,13 +153,11 @@ private void startGameServer(Socket player1, Socket player2) {
 
 
                         player1Score = player1Score + nextScore;
-                        out1.writeObject(new Message(p1name + " gained: " + nextScore + " points!"));
-                        out2.writeObject(new Message(p1name + " gained: " + nextScore + " points!"));
                         correctSelections++;
                         System.out.println(correctSelections + " " + "correct selection");
 
                         out1.writeObject(new Score(player1Score, player2Score));
-                        out2.writeObject(new Score(player1Score, player2Score));
+                        out2.writeObject(new Score(player2Score, player1Score));
                         nextScore = 5;
                         break;
                     } else {
@@ -187,12 +190,11 @@ private void startGameServer(Socket player1, Socket player2) {
                         out1.writeObject(flip2);
 
                         player2Score = player2Score + nextScore;
-                        out1.writeObject(new Message(p2name + " gained: " + nextScore + " points!"));
-                        out2.writeObject(new Message(p2name + " gained: " + nextScore + " points!"));
+
                         correctSelections++;
                         System.out.println(correctSelections + " " + "correct selection");
                         out1.writeObject(new Score(player1Score, player2Score));
-                        out2.writeObject(new Score(player1Score, player2Score));
+                        out2.writeObject(new Score(player2Score, player1Score));
                         nextScore = 5;
                         break;
                     } else {
@@ -216,12 +218,18 @@ private void startGameServer(Socket player1, Socket player2) {
             while (true) {
 
                 if (player1Score > player2Score) {
+                    chatOut1.writeObject(new Message(p1name + " won with: " + player1Score + " points!\n"));
+                    chatOut2.writeObject(new Message(p1name + " won with: " + player1Score + " points!\n"));
                     out1.writeObject(Action.sendAction.WIN);
                     out2.writeObject(Action.sendAction.LOSE);
                 } else if (player2Score > player1Score) {
+                    chatOut1.writeObject(new Message(p2name + " won with: " + player2Score + " points!\n"));
+                    chatOut2.writeObject(new Message(p2name + " won with: " + player2Score + " points!\n"));
                     out2.writeObject(Action.sendAction.WIN);
                     out1.writeObject(Action.sendAction.LOSE);
                 } else {
+                    chatOut1.writeObject(new Message("A draw occurred with: " + player1Score + " points."));
+                    chatOut2.writeObject(new Message("A draw occurred with: " + player1Score + " points."));
                     out1.writeObject(Action.sendAction.DRAW);
                     out2.writeObject(Action.sendAction.DRAW);
                 }
