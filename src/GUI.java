@@ -12,16 +12,19 @@ public class GUI extends JFrame implements ActionListener {
     JPanel gamePanel;
     JPanel sideBar;
 
+    private String userId = null;
+    String p2Userid = null;
+
     static int totalTiles = 0;
     int correctSelections = 0;
     boolean first = true;
     int currentIndex = -1;
     static boolean buttonLock = false;
     private Client client;
-    JLabel scoreText = new JLabel("<html>Player 1: 0 points<br>Player 2: 0 points<html> ");
+    JLabel scoreText = new JLabel("<html> P1: 0 points<br> P2: 0 points<html> ");
     JTextArea chat = new JTextArea();
 
-    private String userId = "Player" + (int)(Math.random() * 1000);
+
 
 
     static ArrayList<tiles> cardList = new ArrayList<>();
@@ -64,10 +67,10 @@ public class GUI extends JFrame implements ActionListener {
 
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
-        JButton settingsButton = new JButton("Settings");
+        JButton settingsButton = new JButton("Big button that dont do nothing");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
-        enterMessage.addActionListener( e -> {
-                String message = enterMessage.getText();
+        enterMessage.addActionListener(e -> {
+            String message = enterMessage.getText();
             try {
                 sendMessage(userId, message);
             } catch (IOException ex) {
@@ -75,7 +78,6 @@ public class GUI extends JFrame implements ActionListener {
             }
             enterMessage.setText(null);
         });
-        settingsButton.addActionListener(e -> showSettingWindow());
 
         setContentPane(gamePanel);
         setTitle("Memory");
@@ -196,6 +198,58 @@ public class GUI extends JFrame implements ActionListener {
         buttonList.get(currentIndex).setEnabled(false);
     }
 
+    public void enterUser(int tiles) {
+        JFrame userWindow = new JFrame();
+        userWindow.setResizable(false);
+
+        JPanel labelPanel = new JPanel(new BorderLayout());
+        JLabel enterName = new JLabel("Enter your username", SwingConstants.CENTER);
+        labelPanel.add(enterName);
+        labelPanel.setBorder(new EmptyBorder(15, 15, 10, 15));
+
+        JPanel textFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JTextField userDialogue = new JTextField(20);
+        textFieldPanel.add(userDialogue);
+        textFieldPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JButton connect = new JButton("CONNECT");
+        connect.setEnabled(false);
+        buttonPanel.add(connect);
+        buttonPanel.setBorder(new EmptyBorder(10, 15, 15, 15));
+
+        userWindow.add(labelPanel, BorderLayout.NORTH);
+        userWindow.add(textFieldPanel, BorderLayout.CENTER);
+        userWindow.add(buttonPanel, BorderLayout.SOUTH);
+
+        userWindow.pack();
+        userWindow.setVisible(true);
+
+        userDialogue.addActionListener(e -> {
+            String userName = userDialogue.getText();
+            if (userName.length() > 10) {
+                enterName.setText("Username too long. Maximum 10 characters.");
+                connect.setEnabled(false);
+            } else if (userName.length() < 3) {
+                enterName.setText("Username too short. Minimum 3 characters.");
+                connect.setEnabled(false);
+            } else {
+                enterName.setText("Username set to: " + userName);
+                userId = userName;
+                connect.setEnabled(true);
+            }
+        });
+        connect.addActionListener(e -> {
+            initGame(tiles);
+            try {
+                client.sendOb(userId);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            userWindow.dispose();
+        });
+    }
+
     public void showWinWindow(int scenario) {
 
         JFrame winWindow = new JFrame();
@@ -203,17 +257,13 @@ public class GUI extends JFrame implements ActionListener {
         JPanel text = new JPanel(new BorderLayout());
         winWindow.setResizable(false);
         JLabel startNew = new JLabel("", SwingConstants.CENTER);
-        winWindow.setLocationRelativeTo(cards);
 
         switch (scenario) {
-            case 1 ->
-                startNew.setText("YOU WON! Play again?");
+            case 1 -> startNew.setText("YOU WON! Play again?");
 
-        case 2 ->
-                startNew.setText("You lost. Play again?");
-         case 3 ->
-                startNew.setText("Draw... Play again?");
-            }
+            case 2 -> startNew.setText("You lost. Play again?");
+            case 3 -> startNew.setText("Draw... Play again?");
+        }
 
         JButton positive = new JButton("Yes");
         JButton negative = new JButton("No");
@@ -225,8 +275,8 @@ public class GUI extends JFrame implements ActionListener {
         buttons.setBorder(new EmptyBorder(15, 15, 15, 15));
         text.setBorder(new EmptyBorder(15, 5, 0, 5));
         winWindow.pack();
-        winWindow.setLocationRelativeTo(null);
         winWindow.setVisible(true);
+        winWindow.setLocationRelativeTo(this);
 
         positive.addActionListener(e -> {
             try {
@@ -266,83 +316,8 @@ public class GUI extends JFrame implements ActionListener {
         cards.revalidate();
     }
 
-    public void showSettingWindow() {
-        JPanel settingsPanel = new JPanel();
-        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
-        settingsPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
-
-        JPanel resetRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton reset = new JButton("Reset Game");
-        reset.setPreferredSize(new Dimension(200, 40));
-        resetRow.add(reset);
-
-        JPanel difficultyRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        JButton easy = new JButton("Easy");
-        JButton medium = new JButton("Medium");
-        JButton hard = new JButton("Hard");
-        difficultyRow.add(easy);
-        difficultyRow.add(medium);
-        difficultyRow.add(hard);
-
-        settingsPanel.add(resetRow);
-        settingsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        settingsPanel.add(difficultyRow);
-
-        setContentPane(settingsPanel);
-        revalidate();
-        repaint();
-
-        Runnable applyDifficulty = () -> {
-            cards.removeAll();
-            buttonList.clear();
-            correctSelections = 0;
-            first = true;
-            buttonLock = false;
-
-            addButtons();
-            setContentPane(gamePanel);
-            revalidate();
-            repaint();
-        };
-
-        switch (totalTiles) {
-            case 16:
-                easy.setEnabled(false);
-                medium.setEnabled(true);
-                hard.setEnabled(true);
-                break;
-            case 30:
-                easy.setEnabled(true);
-                medium.setEnabled(false);
-                hard.setEnabled(true);
-                break;
-            case 64:
-                easy.setEnabled(true);
-                medium.setEnabled(true);
-                hard.setEnabled(false);
-                break;
-        }
-
-        reset.addActionListener(e -> applyDifficulty.run());
-
-        easy.addActionListener(e -> {
-            totalTiles = 16;
-            applyDifficulty.run();
-        });
-
-        medium.addActionListener(e -> {
-            totalTiles = 30;
-            applyDifficulty.run();
-        });
-
-        hard.addActionListener(e -> {
-            totalTiles = 64;
-            applyDifficulty.run();
-        });
-    }
-
     public void setScoreText(int a, int b) {
-        scoreText.setText("<html>Player 1: " + a + " points<br>Player 2: " + b +" points<html> ");
+        scoreText.setText("<html>" + userId + ": " + a + " points<br>" + p2Userid + ": " + b + " points<html> ");
     }
 
     public void sendMessage(String userName, String chatMessage) throws IOException {
@@ -356,7 +331,7 @@ public class GUI extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
     }
 
-    public static void main() {
+    static void main() {
         GUI gui = new GUI(null);
 
         Client client2 = new Client();

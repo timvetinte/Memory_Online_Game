@@ -73,13 +73,12 @@ public class Client {
 
                 if (firstGame) {
 
-                    gui.initGame(tiles);
+                    gui.enterUser(totalTiles);
                     firstGame = false;
                 }
             }
             if (msg instanceof String) {
-                System.out.println(msg);
-                out.flush();
+                gui.p2Userid = (String) msg;
             }
             if (msg instanceof Flip flip) {
                 int index = flip.getIndex();
@@ -133,8 +132,7 @@ public class Client {
                     case WIN -> gui.showWinWindow(1);
                     case LOSE -> gui.showWinWindow(2);
                     case DRAW -> gui.showWinWindow(3);
-                    case RESET ->
-                        gui.resetGame();
+                    case RESET -> gui.resetGame();
                 }
             }
             if (msg instanceof ArrayList<?> list) {
@@ -144,7 +142,7 @@ public class Client {
                 gui.cards.revalidate();
                 gui.cards.repaint();
             }
-            if(msg instanceof Score score){
+            if (msg instanceof Score score) {
                 gui.setScoreText(score.getP1Score(), score.getP2Score());
                 p1Score = score.getP1Score();
                 p2Score = score.getP2Score();
@@ -156,7 +154,7 @@ public class Client {
         while (true) {
             Object msg = in.readObject();
 
-            if(msg instanceof Message){
+            if (msg instanceof Message) {
                 String chatMessage = ((Message) msg).getChatMessage();
                 gui.chat.append(chatMessage);
             }

@@ -7,6 +7,9 @@ import java.util.ArrayList;
 
 public class Server {
 
+    private String p1name;
+    private String p2name;
+
     int gamePort = 5432;
     int chatPort = 5433;
 
@@ -14,6 +17,8 @@ public class Server {
     int player2Score = 0;
 
     int playAgain = 0;
+
+    private boolean firstGame = true;
 
     int nextScore = 5;
 
@@ -87,24 +92,47 @@ private void startGameServer(Socket player1, Socket player2) {
          ObjectInputStream in2 = new ObjectInputStream(player2.getInputStream())) {
 
 
+
+
+
+
         while (true) {
             correctSelections = 0;
             player1Score = 0;
             player2Score = 0;
+
+
 
             populateField();
 
             out1.reset();
             out1.writeObject(totalTiles);
             out1.writeObject(cardList);
-            out1.writeObject(Action.sendAction.UNLOCK);
             out1.flush();
 
             out2.reset();
             out2.writeObject(totalTiles);
             out2.writeObject(cardList);
-            out2.writeObject(Action.sendAction.LOCK);
             out2.flush();
+
+            out1.writeObject(Action.sendAction.LOCK);
+            out2.writeObject(Action.sendAction.LOCK);
+
+            if(firstGame){
+
+                p1name = (String) in1.readObject();
+                p2name = (String) in2.readObject();
+
+                out1.writeObject(p2name);
+                out2.writeObject(p1name);
+
+                out1.writeObject(new Score(0, 0));
+                out2.writeObject(new Score(0, 0));
+
+                firstGame=false;
+            }
+            out1.writeObject(Action.sendAction.UNLOCK);
+            out2.writeObject(Action.sendAction.LOCK);
 
 
             while (correctSelections < totalTiles / 2) {
@@ -120,6 +148,8 @@ private void startGameServer(Socket player1, Socket player2) {
 
 
                         player1Score = player1Score + nextScore;
+                        out1.writeObject(new Message(p1name + " gained: " + nextScore + " points!"));
+                        out2.writeObject(new Message(p1name + " gained: " + nextScore + " points!"));
                         correctSelections++;
                         System.out.println(correctSelections + " " + "correct selection");
 
@@ -140,6 +170,7 @@ private void startGameServer(Socket player1, Socket player2) {
                 out1.writeObject(Action.sendAction.LOCK);
                 out2.writeObject(Action.sendAction.UNLOCK);
 
+
                 if (correctSelections == totalTiles / 2) {
                     break;
                 }
@@ -156,6 +187,8 @@ private void startGameServer(Socket player1, Socket player2) {
                         out1.writeObject(flip2);
 
                         player2Score = player2Score + nextScore;
+                        out1.writeObject(new Message(p2name + " gained: " + nextScore + " points!"));
+                        out2.writeObject(new Message(p2name + " gained: " + nextScore + " points!"));
                         correctSelections++;
                         System.out.println(correctSelections + " " + "correct selection");
                         out1.writeObject(new Score(player1Score, player2Score));
