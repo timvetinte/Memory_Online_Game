@@ -67,7 +67,7 @@ public class GUI extends JFrame implements ActionListener {
 
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
-        JButton settingsButton = new JButton("Big button that dont do nothing");
+        JButton settingsButton = new JButton("Disconnect");
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
         enterMessage.addActionListener(e -> {
             String message = enterMessage.getText();

@@ -170,13 +170,17 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
                 }
 
 
-                out1.writeObject(Action.sendAction.LOCK);
-                out2.writeObject(Action.sendAction.UNLOCK);
+
 
 
                 if (correctSelections == totalTiles / 2) {
+                    out1.writeObject(Action.sendAction.LOCK);
+                    out2.writeObject(Action.sendAction.LOCK);
                     break;
                 }
+
+                out1.writeObject(Action.sendAction.LOCK);
+                out2.writeObject(Action.sendAction.UNLOCK);
 
 
                 //HÄR BYTER SPELAREN
@@ -206,13 +210,17 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
 
                 }
 
-                out2.writeObject(Action.sendAction.LOCK);
-                out1.writeObject(Action.sendAction.UNLOCK);
+
 
 
                 if (correctSelections == totalTiles / 2) {
+                    out1.writeObject(Action.sendAction.LOCK);
+                    out2.writeObject(Action.sendAction.LOCK);
                     break;
                 }
+
+                out2.writeObject(Action.sendAction.LOCK);
+                out1.writeObject(Action.sendAction.UNLOCK);
 
             }
             while (true) {
@@ -244,6 +252,13 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
                     out2.writeObject(Action.sendAction.RESET);
                     out1.writeObject(new Score(0, 0));
                     out2.writeObject(new Score(0, 0));
+                    break;
+                }
+                else {
+                    chatOut1.writeObject(new Message("No new game starting, one or more declined. \n"));
+                    chatOut2.writeObject(new Message("No new game starting, one or more declined. \n"));
+                    out1.writeObject(Action.sendAction.LOCK);
+                    out2.writeObject(Action.sendAction.LOCK);
                     break;
                 }
             }
