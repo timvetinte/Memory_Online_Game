@@ -236,8 +236,8 @@ public class GUI extends JFrame implements ActionListener {
 
         userDialogue.addActionListener(e -> {
             String userName = userDialogue.getText();
-            if (userName.length() > 10) {
-                enterName.setText("Username too long. Maximum 10 characters.");
+            if (userName.length() > 15) {
+                enterName.setText("Username too long. Maximum 15 characters.");
                 connect.setEnabled(false);
             } else if (userName.length() < 3) {
                 enterName.setText("Username too short. Minimum 3 characters.");
@@ -251,17 +251,28 @@ public class GUI extends JFrame implements ActionListener {
         connect.addActionListener(e -> {
             connect.setEnabled(false);
             enterName.setText("Looking for other player.");
-            client.connect();
-            try {
-                client.sendOb(userId);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-            userWindow.dispose();
+            enterName.setFocusable(false);
+            connect.setFocusable(false);
+            revalidate();
+            repaint();
+
+            SwingUtilities.invokeLater(() -> {
+                client.connect();
+
+                try {
+                    client.sendOb(userId);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                userWindow.dispose();
+            });
         });
     }
 
-    public void showWinWindow(int scenario) {
+
+
+        public void showWinWindow(int scenario) {
 
         JFrame winWindow = new JFrame();
         JPanel buttons = new JPanel();
