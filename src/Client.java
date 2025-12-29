@@ -25,11 +25,14 @@ public class Client {
     private ObjectInputStream gameIn;
     private ObjectInputStream chatIn;
 
-
-    private int totalTiles = 0;
     private boolean firstGame = true;
 
     public Client() {
+
+    }
+
+    public void connect(){
+
         try {
             Socket gameSocket = new Socket(hostname, port);
             Socket chatSocket = new Socket(hostname, chatPort);
@@ -43,7 +46,7 @@ public class Client {
 
             new Thread(() -> {
                 try {
-                    listenLoop(gameOut, gameIn);
+                    listenLoop(gameIn);
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -51,7 +54,7 @@ public class Client {
 
             new Thread(() -> {
                 try {
-                    chatLoop(chatOut, chatIn);
+                    chatLoop(chatIn);
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -63,19 +66,18 @@ public class Client {
         }
     }
 
-    public void listenLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    public void listenLoop(ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
 
             if (msg instanceof Integer tiles) {
-                this.totalTiles = tiles;
-                GUI.totalTiles = tiles;
+                gui.setTileAmount(tiles);
 
-                if (firstGame) {
-
-                    gui.enterUser(totalTiles);
-                    firstGame = false;
+                if(firstGame){
+                    gui.initGame(tiles);
+                    firstGame=false;
                 }
+
             }
             if (msg instanceof String) {
                 gui.p2Userid = (String) msg;
@@ -86,14 +88,6 @@ public class Client {
                 gui.flipTile(gui.buttonList.get(index), index, true);
                 gui.flipTile(gui.buttonList.get(currentIndex), currentIndex, true);
 
-                /*
-
-                Timer t1 = new Timer(300, e -> {
-
-                });
-                t1.setRepeats(false);
-                t1.start();
-                */
 
                 if (flip.isCorrect()) {
                     gui.disable(index, flip.getCurrentIndex());
@@ -135,9 +129,9 @@ public class Client {
                     case RESET -> gui.resetGame();
                 }
             }
-            if (msg instanceof ArrayList<?> list) {
+            if (msg instanceof ArrayList list) {
                 gui.cards.removeAll();
-                gui.cardList = (ArrayList<tiles>) list;
+                gui.setCardList(list);
                 gui.addButtons();
                 gui.cards.revalidate();
                 gui.cards.repaint();
@@ -150,7 +144,7 @@ public class Client {
         }
     }
 
-    public void chatLoop(ObjectOutputStream out, ObjectInputStream in) throws IOException, ClassNotFoundException {
+    public void chatLoop(ObjectInputStream in) throws IOException, ClassNotFoundException {
         while (true) {
             Object msg = in.readObject();
 
@@ -175,7 +169,7 @@ public class Client {
     }
 
 
-    public static void main(String[] args) {
-        Client client = new Client();
+    static void main() {
+        new Client();
     }
 }

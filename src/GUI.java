@@ -15,7 +15,7 @@ public class GUI extends JFrame implements ActionListener {
     private String userId = null;
     String p2Userid = null;
 
-    static int totalTiles = 0;
+    int totalTiles = 0;
     int correctSelections = 0;
     boolean first = true;
     int currentIndex = -1;
@@ -27,7 +27,7 @@ public class GUI extends JFrame implements ActionListener {
 
 
 
-    static ArrayList<tiles> cardList = new ArrayList<>();
+    ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
 
 
@@ -86,6 +86,14 @@ public class GUI extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    public void setTileAmount(int tiles){
+        totalTiles = tiles;
+    }
+
+    public void setCardList(ArrayList <tiles> list){
+        cardList = list;
     }
 
     public void addButtons() {
@@ -189,7 +197,7 @@ public class GUI extends JFrame implements ActionListener {
         }
     }
 
-    public static void setButtonSymbolText(JButton button, int index) {
+    public void setButtonSymbolText(JButton button, int index) {
         button.setText(cardList.get(index).getSymbol());
     }
 
@@ -199,7 +207,7 @@ public class GUI extends JFrame implements ActionListener {
         buttonList.get(currentIndex).setEnabled(false);
     }
 
-    public void enterUser(int tiles) {
+    public void enterUser() {
         JFrame userWindow = new JFrame();
         userWindow.setResizable(false);
 
@@ -241,7 +249,9 @@ public class GUI extends JFrame implements ActionListener {
             }
         });
         connect.addActionListener(e -> {
-            initGame(tiles);
+            connect.setEnabled(false);
+            enterName.setText("Looking for other player.");
+            client.connect();
             try {
                 client.sendOb(userId);
             } catch (IOException ex) {
@@ -333,11 +343,11 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     static void main() {
-        GUI gui = new GUI(null);
-
         Client client2 = new Client();
-        gui.setClient(client2);
+        GUI gui = new GUI(null);
         client2.setGUI(gui);
+        gui.setClient(client2);
+        gui.enterUser();
     }
 
     public void setClient(Client client) {

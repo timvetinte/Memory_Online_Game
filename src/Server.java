@@ -98,9 +98,6 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
 
 
 
-
-
-
         while (true) {
             correctSelections = 0;
             player1Score = 0;
@@ -119,6 +116,8 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
             out2.writeObject(totalTiles);
             out2.writeObject(cardList);
             out2.flush();
+
+
 
             out1.writeObject(Action.sendAction.LOCK);
             out2.writeObject(Action.sendAction.LOCK);
