@@ -9,6 +9,7 @@ public class Action implements Serializable {
         LOSE,
         DRAW,
         DISABLE,
+        OTHERDISCONNECT,
         RESET;
 
         int scoreP1;

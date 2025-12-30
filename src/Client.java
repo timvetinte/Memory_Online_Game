@@ -71,6 +71,9 @@ public class Client {
                     listenLoop(gameIn);
                 } catch (EOFException f) {
                     SwingUtilities.invokeLater(() -> gui.otherPlayerDisconnected());
+                } catch (SocketException s) {
+                    disconnect();
+                    System.out.println("SOCKET EXCEPTION: SOCKET CLOSED");
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -80,7 +83,8 @@ public class Client {
                 try {
                     chatLoop(chatIn);
                 } catch (SocketException f){
-                    System.out.println("Socket Exception");
+                    disconnect();
+                    System.out.println("Socket Exception in chat");
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -154,6 +158,10 @@ public class Client {
                     case DRAW -> gui.showWinWindow(3);
                     case RESET -> gui.resetGame();
                     case DISABLE -> gui.disableButtons(true);
+                    case OTHERDISCONNECT -> {
+                        gui.otherPlayerDisconnected();
+                        disconnect();
+                    }
                 }
             }
             if (msg instanceof ArrayList list) {
@@ -183,7 +191,11 @@ public class Client {
     }
 
     public void sendOb(Object o) throws IOException {
-        gameOut.writeObject(o);
+        if(gameOut!=null) {
+            gameOut.writeObject(o);
+        } else {
+            System.out.println("GAMEOUT WAS NULL");
+        }
     }
 
     public void resetFirstGame(){

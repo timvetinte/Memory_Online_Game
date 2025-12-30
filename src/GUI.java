@@ -26,6 +26,7 @@ public class GUI extends JFrame implements ActionListener {
     JScrollPane chatScrollPane = new JScrollPane(chat);
 
 
+
     ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
 
@@ -44,6 +45,7 @@ public class GUI extends JFrame implements ActionListener {
         sideBar = new JPanel(new BorderLayout());
 
         chat.setEditable(false);
+        chat.setFocusable(false);
         JTextField enterMessage = new JTextField();
 
         this.setResizable(false);
@@ -69,7 +71,12 @@ public class GUI extends JFrame implements ActionListener {
         JButton settingsButton = new JButton("Disconnect");
         settingsButton.addActionListener(e ->{
 
-            confirmDisconnect();
+            try {
+                confirmDisconnect();
+            } catch (IOException ex) {
+                backToUserInput();
+                System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
+            }
         });
 
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
@@ -287,6 +294,7 @@ public class GUI extends JFrame implements ActionListener {
             case 1 -> startNew.setText("YOU WON! Play again?");
 
             case 2 -> startNew.setText("You lost. Play again?");
+
             case 3 -> startNew.setText("Draw... Play again?");
         }
 
@@ -305,6 +313,7 @@ public class GUI extends JFrame implements ActionListener {
 
         positive.addActionListener(e -> {
             try {
+                client.sendChatMessage(new Message(userId + " voted: yes!\n"));
                 client.sendOb(1);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -315,6 +324,7 @@ public class GUI extends JFrame implements ActionListener {
         {
             try {
                 client.sendOb(0);
+                client.sendChatMessage(new Message(userId + " voted: no.\n"));
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -373,6 +383,7 @@ public class GUI extends JFrame implements ActionListener {
         );
 
         if (result == JOptionPane.YES_OPTION) {
+            client.disconnect();
             backToUserInput();
         } else {
 
@@ -380,7 +391,7 @@ public class GUI extends JFrame implements ActionListener {
 
     }
 
-    public void confirmDisconnect(){
+    public void confirmDisconnect() throws IOException {
 
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -390,6 +401,8 @@ public class GUI extends JFrame implements ActionListener {
         );
 
         if (result == JOptionPane.YES_OPTION) {
+            client.sendOb(Action.sendAction.OTHERDISCONNECT);
+            client.disconnect();
             backToUserInput();
         } else {
 
@@ -400,6 +413,18 @@ public class GUI extends JFrame implements ActionListener {
         this.setVisible(false);
         this.remove(gamePanel);
         client.resetFirstGame();
+        cardList.clear();
+        buttonList.clear();
+        cards.removeAll();
+        correctSelections=0;
+        first=true;
+        currentIndex=-1;
+        buttonLock=false;
+        totalTiles=0;
+        userId=null;
+        p2Userid=null;
+        chat.setText("");
+
         enterUser();
     }
 
