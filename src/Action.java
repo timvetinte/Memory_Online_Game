@@ -8,8 +8,7 @@ public class Action implements Serializable {
         WIN,
         LOSE,
         DRAW,
-        DISCONNECT,
-        BACK2USER,
+        DISABLE,
         RESET;
 
         int scoreP1;

@@ -23,6 +23,7 @@ public class GUI extends JFrame implements ActionListener {
     private Client client;
     JLabel scoreText = new JLabel("<html> P1: 0 points<br> P2: 0 points<html> ");
     JTextArea chat = new JTextArea();
+    JScrollPane chatScrollPane = new JScrollPane(chat);
 
 
     ArrayList<tiles> cardList = new ArrayList<>();
@@ -59,13 +60,18 @@ public class GUI extends JFrame implements ActionListener {
 
 
         sideBar.add(scoreText, BorderLayout.NORTH);
-        sideBar.add(chat, BorderLayout.CENTER);
+        sideBar.add(chatScrollPane, BorderLayout.CENTER);
         sideBar.add(enterMessage, BorderLayout.SOUTH);
 
 
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
         JButton settingsButton = new JButton("Disconnect");
+        settingsButton.addActionListener(e ->{
+
+            confirmDisconnect();
+        });
+
         gamePanel.add(settingsButton, BorderLayout.SOUTH);
         enterMessage.addActionListener(e -> {
             String message = enterMessage.getText();
@@ -361,20 +367,40 @@ public class GUI extends JFrame implements ActionListener {
         disableButtons(true);
         int result = JOptionPane.showConfirmDialog(
                 this,
-                "Other player disconnected, new Game?",
+                "Other player disconnected, New Game?",
                 "Game Over",
                 JOptionPane.YES_NO_OPTION
         );
 
         if (result == JOptionPane.YES_OPTION) {
-            this.setVisible(false);
-            this.remove(gamePanel);
-            client.resetFirstGame();
-            enterUser();
+            backToUserInput();
         } else {
 
         }
 
+    }
+
+    public void confirmDisconnect(){
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to disconnect?",
+                "Quit?",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (result == JOptionPane.YES_OPTION) {
+            backToUserInput();
+        } else {
+
+        }
+    }
+
+    public void backToUserInput(){
+        this.setVisible(false);
+        this.remove(gamePanel);
+        client.resetFirstGame();
+        enterUser();
     }
 
 

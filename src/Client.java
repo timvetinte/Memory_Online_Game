@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 
 
@@ -78,6 +79,8 @@ public class Client {
             new Thread(() -> {
                 try {
                     chatLoop(chatIn);
+                } catch (SocketException f){
+                    System.out.println("Socket Exception");
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -150,6 +153,7 @@ public class Client {
                     case LOSE -> gui.showWinWindow(2);
                     case DRAW -> gui.showWinWindow(3);
                     case RESET -> gui.resetGame();
+                    case DISABLE -> gui.disableButtons(true);
                 }
             }
             if (msg instanceof ArrayList list) {

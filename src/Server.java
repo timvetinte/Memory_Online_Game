@@ -241,8 +241,8 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
                     out2.writeObject(Action.sendAction.WIN);
                     out1.writeObject(Action.sendAction.LOSE);
                 } else {
-                    chatOut1.writeObject(new Message("A draw occurred with: " + player1Score + " points."));
-                    chatOut2.writeObject(new Message("A draw occurred with: " + player1Score + " points."));
+                    chatOut1.writeObject(new Message("A draw occurred with: " + player1Score + " points.\n"));
+                    chatOut2.writeObject(new Message("A draw occurred with: " + player1Score + " points.\n"));
                     out1.writeObject(Action.sendAction.DRAW);
                     out2.writeObject(Action.sendAction.DRAW);
                 }
@@ -262,8 +262,8 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
                 else {
                     chatOut1.writeObject(new Message("No new game starting, one or more declined. \n"));
                     chatOut2.writeObject(new Message("No new game starting, one or more declined. \n"));
-                    out1.writeObject(Action.sendAction.LOCK);
-                    out2.writeObject(Action.sendAction.LOCK);
+                    out1.writeObject(Action.sendAction.DISABLE);
+                    out2.writeObject(Action.sendAction.DISABLE);
                     break;
                 }
             }
