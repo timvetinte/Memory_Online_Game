@@ -25,8 +25,6 @@ public class GUI extends JFrame implements ActionListener {
     JTextArea chat = new JTextArea();
 
 
-
-
     ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
 
@@ -88,11 +86,11 @@ public class GUI extends JFrame implements ActionListener {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
-    public void setTileAmount(int tiles){
+    public void setTileAmount(int tiles) {
         totalTiles = tiles;
     }
 
-    public void setCardList(ArrayList <tiles> list){
+    public void setCardList(ArrayList<tiles> list) {
         cardList = list;
     }
 
@@ -271,8 +269,7 @@ public class GUI extends JFrame implements ActionListener {
     }
 
 
-
-        public void showWinWindow(int scenario) {
+    public void showWinWindow(int scenario) {
 
         JFrame winWindow = new JFrame();
         JPanel buttons = new JPanel();
@@ -346,6 +343,38 @@ public class GUI extends JFrame implements ActionListener {
         String sendsThis = userName + ": " + chatMessage + "\n";
         chat.append(sendsThis);
         client.sendChatMessage(new Message(sendsThis));
+    }
+
+    public void disableButtons(boolean yesno) {
+        if (yesno) {
+            for (JButton b : buttonList) {
+                b.setEnabled(false);
+            }
+        } else {
+            for (JButton b : buttonList) {
+                b.setEnabled(true);
+            }
+        }
+    }
+
+    public void otherPlayerDisconnected() {
+        disableButtons(true);
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Other player disconnected, new Game?",
+                "Game Over",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (result == JOptionPane.YES_OPTION) {
+            this.setVisible(false);
+            this.remove(gamePanel);
+            client.resetFirstGame();
+            enterUser();
+        } else {
+
+        }
+
     }
 
 

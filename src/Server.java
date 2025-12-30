@@ -26,12 +26,18 @@ public class Server {
     int totalTiles = 36;
 
 
+    private ObjectOutputStream out1;
+    private ObjectOutputStream out2;
+
     ArrayList<tiles> cardList = new ArrayList<>();
 
     public Server() {
 
+
         try (ServerSocket serverSocketGame = new ServerSocket(gamePort);
              ServerSocket serverSocketChat = new ServerSocket(chatPort)) {
+
+            firstGame = true;
 
             while (true) {
                 System.out.println("Waiting for player 1");
@@ -263,9 +269,17 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
             }
         }
     } catch (IOException e) {
-        throw new RuntimeException(e);
+        try {
+            player1.close();
+            player2.close();
+        } catch (IOException ex) {
+        }
+        System.out.println("IOException");
+
     } catch (ClassNotFoundException e) {
-        throw new RuntimeException(e);
+        System.out.println("ClassNotFoundException");
+    } finally {
+        firstGame = true;
     }
 }
 

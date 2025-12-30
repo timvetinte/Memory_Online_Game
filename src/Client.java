@@ -1,6 +1,7 @@
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,7 +32,27 @@ public class Client {
 
     }
 
-    public void connect(){
+    public void disconnect(){
+
+        try {
+            if (gameOut != null) gameOut.close();
+            if (gameIn != null) gameIn.close();
+            if (chatOut != null) chatOut.close();
+            if (chatIn != null) chatIn.close();
+        } catch (IOException e) {
+
+        }
+        gameOut = null;
+        gameIn = null;
+        chatOut = null;
+        chatIn = null;
+
+
+    }
+
+    public void connect() {
+
+        disconnect();
 
         try {
             Socket gameSocket = new Socket(hostname, port);
@@ -47,6 +68,8 @@ public class Client {
             new Thread(() -> {
                 try {
                     listenLoop(gameIn);
+                } catch (EOFException f) {
+                    SwingUtilities.invokeLater(() -> gui.otherPlayerDisconnected());
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
@@ -73,9 +96,9 @@ public class Client {
             if (msg instanceof Integer tiles) {
                 gui.setTileAmount(tiles);
 
-                if(firstGame){
+                if (firstGame) {
                     gui.initGame(tiles);
-                    firstGame=false;
+                    firstGame = false;
                 }
 
             }
@@ -157,6 +180,10 @@ public class Client {
 
     public void sendOb(Object o) throws IOException {
         gameOut.writeObject(o);
+    }
+
+    public void resetFirstGame(){
+        firstGame=true;
     }
 
     public void sendChatMessage(Message msg) throws IOException {
