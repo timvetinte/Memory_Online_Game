@@ -23,7 +23,7 @@ public class Server {
     int nextScore = 5;
 
     int correctSelections = 0;
-    int totalTiles = 36;
+    int totalTiles = 4;
 
 
     private ObjectOutputStream out1;
@@ -264,7 +264,7 @@ private void startGameServer(Socket player1, Socket player2, ObjectOutputStream 
                     chatOut2.writeObject(new Message("No new game starting, one or more declined. \n"));
                     out1.writeObject(Action.sendAction.DISABLE);
                     out2.writeObject(Action.sendAction.DISABLE);
-                    break;
+                    return;
                 }
             }
         }

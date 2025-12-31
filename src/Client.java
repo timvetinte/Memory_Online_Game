@@ -143,6 +143,7 @@ public class Client {
                 gui.flipTile(gui.buttonList.get(index), index, true);
             }
             if (msg instanceof Action.sendAction action) {
+                System.out.println(action);
                 switch (action) {
                     case LOCK -> {
                         GUI.buttonLock = true;
@@ -157,7 +158,10 @@ public class Client {
                     case LOSE -> gui.showWinWindow(2);
                     case DRAW -> gui.showWinWindow(3);
                     case RESET -> gui.resetGame();
-                    case DISABLE -> gui.disableButtons(true);
+                    case DISABLE -> {
+                        gui.disableButtons(true);
+                        System.out.println("DISABLED CORRECTLY");
+                    }
                     case OTHERDISCONNECT -> {
                         gui.otherPlayerDisconnected();
                         disconnect();

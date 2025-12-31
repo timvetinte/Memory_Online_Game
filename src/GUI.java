@@ -363,8 +363,10 @@ public class GUI extends JFrame implements ActionListener {
 
     public void disableButtons(boolean yesno) {
         if (yesno) {
+            System.out.println("ButtonList size: " + buttonList.size());
             for (JButton b : buttonList) {
                 b.setEnabled(false);
+                System.out.println("DISABLED: " + b.getText());
             }
         } else {
             for (JButton b : buttonList) {
