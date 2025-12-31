@@ -24,7 +24,8 @@ public class GUI extends JFrame implements ActionListener {
     JLabel scoreText = new JLabel("<html> P1: 0 points<br> P2: 0 points<html> ");
     JTextArea chat = new JTextArea();
     JScrollPane chatScrollPane = new JScrollPane(chat);
-
+    public JButton disconnectButton = new JButton("Disconnect");
+    public JTextField enterMessage = new JTextField();
 
 
     ArrayList<tiles> cardList = new ArrayList<>();
@@ -46,7 +47,7 @@ public class GUI extends JFrame implements ActionListener {
 
         chat.setEditable(false);
         chat.setFocusable(false);
-        JTextField enterMessage = new JTextField();
+
 
         this.setResizable(false);
         cards.setLayout(new GridLayout(side, side));
@@ -68,8 +69,7 @@ public class GUI extends JFrame implements ActionListener {
 
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
-        JButton settingsButton = new JButton("Disconnect");
-        settingsButton.addActionListener(e ->{
+        disconnectButton.addActionListener(e -> {
 
             try {
                 confirmDisconnect();
@@ -79,7 +79,7 @@ public class GUI extends JFrame implements ActionListener {
             }
         });
 
-        gamePanel.add(settingsButton, BorderLayout.SOUTH);
+        gamePanel.add(disconnectButton, BorderLayout.SOUTH);
         enterMessage.addActionListener(e -> {
             String message = enterMessage.getText();
             try {
@@ -289,6 +289,7 @@ public class GUI extends JFrame implements ActionListener {
         JPanel text = new JPanel(new BorderLayout());
         winWindow.setResizable(false);
         JLabel startNew = new JLabel("", SwingConstants.CENTER);
+        winWindow.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         switch (scenario) {
             case 1 -> startNew.setText("YOU WON! Play again?");
@@ -310,9 +311,11 @@ public class GUI extends JFrame implements ActionListener {
         winWindow.pack();
         winWindow.setVisible(true);
         winWindow.setLocationRelativeTo(this);
+        disableElements(false);
 
         positive.addActionListener(e -> {
             try {
+                disableElements(true);
                 client.sendChatMessage(new Message(userId + " voted: yes!\n"));
                 client.sendOb(1);
             } catch (IOException ex) {
@@ -320,8 +323,8 @@ public class GUI extends JFrame implements ActionListener {
             }
             winWindow.dispose();
         });
-        negative.addActionListener(e ->
-        {
+        negative.addActionListener(e -> {
+            disableElements(true);
             try {
                 client.sendOb(0);
                 client.sendChatMessage(new Message(userId + " voted: no.\n"));
@@ -376,6 +379,8 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void otherPlayerDisconnected() {
+        disableElements(false);
+        chat.setEnabled(false);
         disableButtons(true);
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -384,16 +389,20 @@ public class GUI extends JFrame implements ActionListener {
                 JOptionPane.YES_NO_OPTION
         );
 
+        this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
         if (result == JOptionPane.YES_OPTION) {
+            disableElements(true);
             client.disconnect();
             backToUserInput();
         } else {
-
+            disableElements(true);
         }
 
     }
 
     public void confirmDisconnect() throws IOException {
+        disableElements(false);
 
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -401,33 +410,43 @@ public class GUI extends JFrame implements ActionListener {
                 "Quit?",
                 JOptionPane.YES_NO_OPTION
         );
+        this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         if (result == JOptionPane.YES_OPTION) {
+            disableElements(true);
             client.sendOb(Action.sendAction.OTHERDISCONNECT);
             client.disconnect();
             backToUserInput();
         } else {
-
+            disableElements(true);
         }
     }
 
-    public void backToUserInput(){
+    public void backToUserInput() {
         this.setVisible(false);
         this.remove(gamePanel);
         client.resetFirstGame();
         cardList.clear();
         buttonList.clear();
         cards.removeAll();
-        correctSelections=0;
-        first=true;
-        currentIndex=-1;
-        buttonLock=false;
-        totalTiles=0;
-        userId=null;
-        p2Userid=null;
+        correctSelections = 0;
+        first = true;
+        currentIndex = -1;
+        buttonLock = false;
+        totalTiles = 0;
+        userId = null;
+        p2Userid = null;
         chat.setText("");
 
         enterUser();
+    }
+
+    public void disableElements(boolean yesno) {
+        disconnectButton.setEnabled(yesno);
+        chat.setEnabled(yesno);
+        enterMessage.setEnabled(yesno);
+
+
     }
 
 

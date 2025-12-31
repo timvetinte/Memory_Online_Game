@@ -70,7 +70,10 @@ public class Client {
                 try {
                     listenLoop(gameIn);
                 } catch (EOFException f) {
-                    SwingUtilities.invokeLater(() -> gui.otherPlayerDisconnected());
+                    SwingUtilities.invokeLater(() -> {
+                        gui.otherPlayerDisconnected();
+                        System.out.println("EOFEXCEPTION");
+                    });
                 } catch (SocketException s) {
                     disconnect();
                     System.out.println("SOCKET EXCEPTION: SOCKET CLOSED");
@@ -164,6 +167,7 @@ public class Client {
                     }
                     case OTHERDISCONNECT -> {
                         gui.otherPlayerDisconnected();
+                        System.out.println("Server sent: OTHERDISCONNECT");
                         disconnect();
                     }
                 }
