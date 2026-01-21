@@ -18,7 +18,9 @@ public class Server {
 
     int playAgain = 0;
 
+
     private boolean firstGame = true;
+    private boolean running = true;
 
     int nextScore = 5;
 
@@ -82,7 +84,7 @@ public class Server {
 
     private void messageReceiver(ObjectInputStream in, ObjectOutputStream out) {
         try {
-            while (true) {
+            while (running) {
                 Object msg = in.readObject();
                 if (msg instanceof Message) {
                     out.writeObject(msg);
@@ -91,6 +93,7 @@ public class Server {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
+            running=false;
         }
     }
 

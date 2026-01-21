@@ -86,7 +86,6 @@ public class Client {
                 try {
                     chatLoop(chatIn);
                 } catch (SocketException f){
-                    disconnect();
                     System.out.println("Socket Exception in chat");
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
@@ -193,6 +192,7 @@ public class Client {
 
             if (msg instanceof Message) {
                 String chatMessage = ((Message) msg).getChatMessage();
+                System.out.println(chatMessage);
                 gui.chat.append(chatMessage);
             }
         }

@@ -74,7 +74,6 @@ public class GUI extends JFrame implements ActionListener {
             try {
                 confirmDisconnect();
             } catch (IOException ex) {
-                backToUserInput();
                 System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
             }
         });
@@ -113,7 +112,7 @@ public class GUI extends JFrame implements ActionListener {
             buttonList.add(jb);
             cards.add(jb);
             int index = i;
-            jb.setFont(new Font("arial", Font.PLAIN, 35));
+            jb.setFont(new Font("Symbola", Font.PLAIN, 35));
             jb.addActionListener(e -> {
                 try {
                     clickButton(jb, index);
@@ -382,6 +381,7 @@ public class GUI extends JFrame implements ActionListener {
         disableElements(false);
         chat.setEnabled(false);
         disableButtons(true);
+        client.disconnect();
         int result = JOptionPane.showConfirmDialog(
                 this,
                 "Other player disconnected, New Game?",
@@ -393,7 +393,6 @@ public class GUI extends JFrame implements ActionListener {
 
         if (result == JOptionPane.YES_OPTION) {
             disableElements(true);
-            client.disconnect();
             backToUserInput();
         } else {
             disableElements(true);
@@ -444,6 +443,7 @@ public class GUI extends JFrame implements ActionListener {
     public void disableElements(boolean yesno) {
         disconnectButton.setEnabled(yesno);
         chat.setEnabled(yesno);
+        enterMessage.setEditable(yesno);
         enterMessage.setEnabled(yesno);
 
 
