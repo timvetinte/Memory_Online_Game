@@ -27,7 +27,7 @@ public class Client {
     private ObjectInputStream gameIn;
     private ObjectInputStream chatIn;
 
-    private boolean firstGame = true;
+    public boolean firstGame = true;
 
     public Client() {
 
@@ -71,7 +71,7 @@ public class Client {
                     listenLoop(gameIn);
                 } catch (EOFException f) {
                     SwingUtilities.invokeLater(() -> {
-                        gui.otherPlayerDisconnected();
+                            gui.otherPlayerDisconnected();
                         System.out.println("EOFEXCEPTION");
                     });
                 } catch (SocketException s) {
@@ -149,12 +149,14 @@ public class Client {
                 switch (action) {
                     case LOCK -> {
                         GUI.buttonLock = true;
-                        gui.cards.setBackground(null);
+                        gui.sideBar.setBackground(null);
+                        gui.scoreText.setForeground(Color.BLACK);
                     }
                     case UNLOCK -> {
 
                         GUI.buttonLock = false;
-                        gui.cards.setBackground(Color.ORANGE);
+                        gui.sideBar.setBackground(Color.ORANGE);
+                        gui.scoreText.setForeground(Color.WHITE);
                     }
                     case WIN -> gui.showWinWindow(1);
                     case LOSE -> gui.showWinWindow(2);
@@ -167,7 +169,6 @@ public class Client {
                     case OTHERDISCONNECT -> {
                         gui.otherPlayerDisconnected();
                         System.out.println("Server sent: OTHERDISCONNECT");
-                        disconnect();
                     }
                 }
             }

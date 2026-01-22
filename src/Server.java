@@ -25,11 +25,7 @@ public class Server {
     int nextScore = 5;
 
     int correctSelections = 0;
-    int totalTiles = 16;
-
-
-    private ObjectOutputStream out1;
-    private ObjectOutputStream out2;
+    int totalTiles = 4;
 
     ArrayList<tiles> cardList = new ArrayList<>();
 

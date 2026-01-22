@@ -27,6 +27,8 @@ public class GUI extends JFrame implements ActionListener {
     public JButton disconnectButton = new JButton("Disconnect");
     public JTextField enterMessage = new JTextField();
 
+    private boolean firstGame = true;
+
 
     ArrayList<tiles> cardList = new ArrayList<>();
     ArrayList<JButton> buttonList = new ArrayList<>();
@@ -69,25 +71,31 @@ public class GUI extends JFrame implements ActionListener {
 
         scoreText.setFont(new Font("Arial", Font.PLAIN, 20));
 
-        disconnectButton.addActionListener(e -> {
 
-            try {
-                confirmDisconnect();
-            } catch (IOException ex) {
-                System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
-            }
-        });
+        if (firstGame) {
+            disconnectButton.addActionListener(e -> {
+
+                try {
+                    confirmDisconnect();
+                } catch (IOException ex) {
+                    System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
+                }
+            });
+        }
 
         gamePanel.add(disconnectButton, BorderLayout.SOUTH);
-        enterMessage.addActionListener(e -> {
-            String message = enterMessage.getText();
-            try {
-                sendMessage(userId, message);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-            enterMessage.setText(null);
-        });
+
+        if (firstGame) {
+            enterMessage.addActionListener(e -> {
+                String message = enterMessage.getText();
+                try {
+                    sendMessage(userId, message);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                enterMessage.setText(null);
+            });
+        }
 
         setContentPane(gamePanel);
         setTitle("Memory");
@@ -96,6 +104,7 @@ public class GUI extends JFrame implements ActionListener {
         setLocationRelativeTo(null);
         setVisible(true);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        firstGame = false;
     }
 
     public void setTileAmount(int tiles) {
@@ -113,6 +122,7 @@ public class GUI extends JFrame implements ActionListener {
             cards.add(jb);
             int index = i;
             jb.setFont(new Font("Symbola", Font.PLAIN, 35));
+            jb.setFocusPainted(false);
             jb.addActionListener(e -> {
                 try {
                     clickButton(jb, index);
@@ -380,27 +390,35 @@ public class GUI extends JFrame implements ActionListener {
     public void otherPlayerDisconnected() {
         disableElements(false);
         chat.setEnabled(false);
+        enterMessage.setEnabled(false);
+        enterMessage.setEditable(false);
         disableButtons(true);
         client.disconnect();
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                "Other player disconnected, New Game?",
-                "Game Over",
-                JOptionPane.YES_NO_OPTION
-        );
+        int result = 0;
+        try {
+            result = JOptionPane.showConfirmDialog(
+                    this,
+                    "Other player disconnected, New Game?",
+                    "Game Over",
+                    JOptionPane.YES_NO_OPTION
+            );
 
-        this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+            this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-        if (result == JOptionPane.YES_OPTION) {
-            disableElements(true);
-            backToUserInput();
-        } else {
-            disableElements(true);
+            if (result == JOptionPane.YES_OPTION) {
+                disableElements(true);
+                backToUserInput();
+            } else {
+                disconnectButton.setEnabled(true);
+            }
+        } catch (NullPointerException e) {
+
         }
 
     }
 
     public void confirmDisconnect() throws IOException {
+        System.out.println("START OF CONFIRM ISSUE");
         disableElements(false);
 
         int result = JOptionPane.showConfirmDialog(
@@ -412,16 +430,18 @@ public class GUI extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         if (result == JOptionPane.YES_OPTION) {
+
             disableElements(true);
-            client.sendOb(Action.sendAction.OTHERDISCONNECT);
             client.disconnect();
             backToUserInput();
+            this.dispose();
         } else {
             disableElements(true);
         }
     }
 
     public void backToUserInput() {
+        firstGame = false;
         this.setVisible(false);
         this.remove(gamePanel);
         client.resetFirstGame();
