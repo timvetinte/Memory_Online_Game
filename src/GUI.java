@@ -388,32 +388,29 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void otherPlayerDisconnected() {
-        disableElements(false);
-        chat.setEnabled(false);
-        enterMessage.setEnabled(false);
-        enterMessage.setEditable(false);
-        disableButtons(true);
-        client.disconnect();
-        int result = 0;
-        try {
-            result = JOptionPane.showConfirmDialog(
-                    this,
-                    "Other player disconnected, New Game?",
-                    "Game Over",
-                    JOptionPane.YES_NO_OPTION
-            );
+            disableElements(false);
+            disableButtons(true);
+            client.disconnect();
+            int result = 0;
+            try {
+                result = JOptionPane.showConfirmDialog(
+                        this,
+                        "Other player disconnected, New Game?",
+                        "Game Over",
+                        JOptionPane.YES_NO_OPTION
+                );
 
-            this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+                this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-            if (result == JOptionPane.YES_OPTION) {
-                disableElements(true);
-                backToUserInput();
-            } else {
-                disconnectButton.setEnabled(true);
+                if (result == JOptionPane.YES_OPTION) {
+                    disableElements(true);
+                    backToUserInput();
+                } else {
+                    disconnectButton.setEnabled(true);
+                }
+            }catch (Exception ignored){
+
             }
-        } catch (NullPointerException e) {
-
-        }
 
     }
 

@@ -70,10 +70,14 @@ public class Client {
                 try {
                     listenLoop(gameIn);
                 } catch (EOFException f) {
-                    SwingUtilities.invokeLater(() -> {
+                    try {
+                        SwingUtilities.invokeLater(() -> {
                             gui.otherPlayerDisconnected();
-                        System.out.println("EOFEXCEPTION");
-                    });
+                            System.out.println("EOFEXCEPTION");
+                        });
+                    }catch (Exception ignored){
+
+                    }
                 } catch (SocketException s) {
                     disconnect();
                     System.out.println("SOCKET EXCEPTION: SOCKET CLOSED");
