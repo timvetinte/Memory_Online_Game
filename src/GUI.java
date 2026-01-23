@@ -111,12 +111,32 @@ public class GUI extends JFrame implements ActionListener {
         totalTiles = tiles;
     }
 
+    public void setTileFontSize(int difficulty){
+        int index = 0;
+        if(difficulty==1) {
+            for (JButton b : buttonList) {
+                b.setFont(new Font("Symbola", Font.PLAIN, 45));
+            }
+        } else if (difficulty==2) {
+            for (JButton b : buttonList) {
+                b.setFont(new Font("Symbola", Font.PLAIN, 35));
+            }
+        } else if (difficulty==3){
+            for (JButton b : buttonList) {
+                b.setFont(new Font("Symbola", Font.PLAIN, 22));
+                System.out.println(index);
+                index++;
+            }
+        }
+    }
+
     public void setCardList(ArrayList<tiles> list) {
         cardList = list;
     }
 
     public void addButtons() {
         for (int i = 0; i < totalTiles; i++) {
+
             JButton jb = new JButton();
             buttonList.add(jb);
             cards.add(jb);
@@ -133,6 +153,14 @@ public class GUI extends JFrame implements ActionListener {
                 }
             });
         }
+        if(totalTiles==64){
+            setTileFontSize(3);
+        } else if (totalTiles==36){
+            setTileFontSize(2);
+        } else if (totalTiles==16) {
+            setTileFontSize(1);
+        }
+
     }
 
     public void clickButton(JButton button, int index) throws InterruptedException, IOException {
@@ -238,7 +266,14 @@ public class GUI extends JFrame implements ActionListener {
 
         JPanel textFieldPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JTextField userDialogue = new JTextField(20);
+        JTextField enterIP = new JTextField(20);
+
         textFieldPanel.add(userDialogue);
+
+        textFieldPanel.add(enterIP);
+        enterIP.setEditable(false);
+        enterIP.setEnabled(false);
+
         textFieldPanel.setBorder(new EmptyBorder(10, 15, 10, 15));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -254,6 +289,14 @@ public class GUI extends JFrame implements ActionListener {
         userWindow.setSize(400, 200);
         userWindow.setVisible(true);
 
+        enterIP.addActionListener(e -> {
+
+            Client.hostname = enterIP.getText();
+            enterName.setText("Ip set to: " + Client.hostname);
+            connect.setEnabled(true);
+
+        });
+
         userDialogue.addActionListener(e -> {
             String userName = userDialogue.getText();
             if (userName.length() > 15) {
@@ -263,9 +306,10 @@ public class GUI extends JFrame implements ActionListener {
                 enterName.setText("Username too short. Minimum 3 characters.");
                 connect.setEnabled(false);
             } else {
-                enterName.setText("Username set to: " + userName);
+                enterName.setText("Enter IP");
                 userId = userName;
-                connect.setEnabled(true);
+                enterIP.setEnabled(true);
+                enterIP.setEditable(true);
             }
         });
         connect.addActionListener(e -> {
@@ -388,29 +432,29 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void otherPlayerDisconnected() {
-            disableElements(false);
-            disableButtons(true);
-            client.disconnect();
-            int result = 0;
-            try {
-                result = JOptionPane.showConfirmDialog(
-                        this,
-                        "Other player disconnected, New Game?",
-                        "Game Over",
-                        JOptionPane.YES_NO_OPTION
-                );
+        disableElements(false);
+        disableButtons(true);
+        client.disconnect();
+        int result = 0;
+        try {
+            result = JOptionPane.showConfirmDialog(
+                    this,
+                    "Other player disconnected, New Game?",
+                    "Game Over",
+                    JOptionPane.YES_NO_OPTION
+            );
 
-                this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+            this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
-                if (result == JOptionPane.YES_OPTION) {
-                    disableElements(true);
-                    backToUserInput();
-                } else {
-                    disconnectButton.setEnabled(true);
-                }
-            }catch (Exception ignored){
-
+            if (result == JOptionPane.YES_OPTION) {
+                disableElements(true);
+                backToUserInput();
+            } else {
+                disconnectButton.setEnabled(true);
             }
+        } catch (Exception ignored) {
+
+        }
 
     }
 
@@ -459,11 +503,8 @@ public class GUI extends JFrame implements ActionListener {
 
     public void disableElements(boolean yesno) {
         disconnectButton.setEnabled(yesno);
-        chat.setEnabled(yesno);
         enterMessage.setEditable(yesno);
         enterMessage.setEnabled(yesno);
-
-
     }
 
 

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class Client {
 
-    String hostname = "127.0.0.1";
+    static String hostname = null;
     int port = 5432;
     int chatPort = 5433;
 
