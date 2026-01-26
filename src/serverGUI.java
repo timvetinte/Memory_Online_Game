@@ -45,7 +45,7 @@ public void ServerGUI() {
         easy.setEnabled(false);
         medium.setEnabled(true);
         hard.setEnabled(true);
-        Server.totalTiles=16;
+        Server.totalTiles = 16;
 
     });
 
@@ -53,7 +53,7 @@ public void ServerGUI() {
         easy.setEnabled(true);
         medium.setEnabled(false);
         hard.setEnabled(true);
-        Server.totalTiles=36;
+        Server.totalTiles = 36;
 
     });
 
@@ -61,13 +61,22 @@ public void ServerGUI() {
         easy.setEnabled(true);
         medium.setEnabled(true);
         hard.setEnabled(false);
-        Server.totalTiles=64;
+        Server.totalTiles = 64;
 
     });
 
     startServer.addActionListener(e -> {
-        chooseDifficulty.setText("Server running...");
+
+        switch (Server.totalTiles) {
+            case 16 -> chooseDifficulty.setText("Server running... Easy difficulty");
+            case 36 -> chooseDifficulty.setText("Server running... Medium difficulty");
+            case 64 -> chooseDifficulty.setText("Server running... Hard difficulty");
+        }
+
         startServer.setFocusable(false);
+        easy.setEnabled(false);
+        medium.setEnabled(false);
+        hard.setEnabled(false);
         startButtonPanel.remove(startServer);
         startButtonPanel.add(closeServer);
         startButtonPanel.repaint();
@@ -78,17 +87,35 @@ public void ServerGUI() {
     });
 
     closeServer.addActionListener(e -> {
-        Server s = server.get();
-        if(s!=null) {
-            try {
-                server.get().shutdownSever();
-            } catch (Exception ignored) {
-                System.out.println("shutdown error");
+
+        try {
+            Server s = server.get();
+            if (s != null) {
+                s.shutdownSever();
+                System.out.println("Shutdown");
+            } else {
+                System.out.println("Server is null!");
             }
+        } catch (Exception ex) {
+            System.out.println("shutdown error: " + ex);
+            ex.printStackTrace();
         }
+
         chooseDifficulty.setText("Choose a difficulty!");
         startButtonPanel.remove(closeServer);
         startButtonPanel.add(startServer);
+
+        easy.setEnabled(true);
+        medium.setEnabled(true);
+        hard.setEnabled(true);
+
+        switch (Server.totalTiles) {
+            case 16 -> easy.setEnabled(false);
+            case 36 -> medium.setEnabled(false);
+            case 64 -> hard.setEnabled(false);
+        }
+        startButtonPanel.repaint();
+        startButtonPanel.revalidate();
     });
 }
 

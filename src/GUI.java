@@ -26,6 +26,8 @@ public class GUI extends JFrame implements ActionListener {
     JScrollPane chatScrollPane = new JScrollPane(chat);
     public JButton disconnectButton = new JButton("Disconnect");
     public JTextField enterMessage = new JTextField();
+    JDialog dialog = null;
+    JFrame winWindow = null;
 
     private boolean firstGame = true;
 
@@ -79,6 +81,8 @@ public class GUI extends JFrame implements ActionListener {
                     confirmDisconnect();
                 } catch (IOException ex) {
                     System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
                 }
             });
         }
@@ -215,7 +219,8 @@ public class GUI extends JFrame implements ActionListener {
                         //Sends the click
                         client.sendOb(new Flip(index, currentIndex, false, true));
                     } catch (IOException ex) {
-                        throw new RuntimeException(ex);
+                        otherPlayerDisconnected();
+                        return;
                     }
                     Timer t = new Timer(1000, e -> {
 
@@ -289,6 +294,9 @@ public class GUI extends JFrame implements ActionListener {
         userWindow.setSize(400, 200);
         userWindow.setVisible(true);
 
+        userWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+
         enterIP.addActionListener(e -> {
 
             Client.hostname = enterIP.getText();
@@ -326,7 +334,7 @@ public class GUI extends JFrame implements ActionListener {
                 try {
                     client.sendOb(userId);
                 } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    System.out.println("Could not send userID");
                 }
 
                 userWindow.dispose();
@@ -337,7 +345,7 @@ public class GUI extends JFrame implements ActionListener {
 
     public void showWinWindow(int scenario) {
 
-        JFrame winWindow = new JFrame();
+        winWindow = new JFrame();
         JPanel buttons = new JPanel();
         JPanel text = new JPanel(new BorderLayout());
         winWindow.setResizable(false);
@@ -435,6 +443,14 @@ public class GUI extends JFrame implements ActionListener {
         disableElements(false);
         disableButtons(true);
         client.disconnect();
+
+        if(dialog!=null){
+            dialog.dispose();
+        }
+        if(winWindow!=null){
+            winWindow.dispose();
+        }
+
         int result = 0;
         try {
             result = JOptionPane.showConfirmDialog(
@@ -458,9 +474,10 @@ public class GUI extends JFrame implements ActionListener {
 
     }
 
-    public void confirmDisconnect() throws IOException {
+    public void confirmDisconnect() throws IOException, InterruptedException {
         System.out.println("START OF CONFIRM ISSUE");
         disableElements(false);
+        dialog = new JDialog (this, "Game Over", true);
 
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -473,7 +490,6 @@ public class GUI extends JFrame implements ActionListener {
         if (result == JOptionPane.YES_OPTION) {
 
             disableElements(true);
-            client.disconnect();
             backToUserInput();
             this.dispose();
         } else {
@@ -483,8 +499,9 @@ public class GUI extends JFrame implements ActionListener {
 
     public void backToUserInput() {
         firstGame = false;
-        this.setVisible(false);
+        this.dispose();
         this.remove(gamePanel);
+        client.disconnect();
         client.resetFirstGame();
         cardList.clear();
         buttonList.clear();
@@ -513,10 +530,10 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     static void main() {
-        Client client2 = new Client();
+        Client client = new Client();
         GUI gui = new GUI(null);
-        client2.setGUI(gui);
-        gui.setClient(client2);
+        client.setGUI(gui);
+        gui.setClient(client);
         gui.enterUser();
     }
 

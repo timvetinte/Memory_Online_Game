@@ -29,8 +29,13 @@ public class Server {
     private Socket player2Chat;
 
     private Thread gameThread;
+    private Thread chatThread;
+    private Thread acceptingThread;
 
     int playAgain = 0;
+
+    ArrayList<Thread> threadList = new ArrayList();
+    ArrayList<ServerSocket> socketList = new ArrayList();
 
 
     private boolean firstGame = true;
@@ -56,51 +61,80 @@ public class Server {
             serverSocketChat.setReuseAddress(true);
             serverSocketChat.bind(new InetSocketAddress(chatPort));
 
+            socketList.add(serverSocketChat);
+            socketList.add(serverSocketGame);
+
 
             firstGame = true;
+            acceptingThread = new Thread(() -> {
+                try {
+                    while (running) {
+                        System.out.println("Waiting for player 1");
+                        player1 = serverSocketGame.accept();
+                        System.out.println("Player one connected");
 
-            while (running) {
-                System.out.println("Waiting for player 1");
-                player1 = serverSocketGame.accept();
-                System.out.println("Player one connected");
+                        System.out.println("Waiting for player 2");
+                        player2 = serverSocketGame.accept();
+                        System.out.println("Player two connected");
+                        player1Chat = serverSocketChat.accept();
+                        player2Chat = serverSocketChat.accept();
 
-                System.out.println("Waiting for player 2");
-                player2 = serverSocketGame.accept();
-                System.out.println("PLayer two connected");
-                player1Chat = serverSocketChat.accept();
-                player2Chat = serverSocketChat.accept();
+                        ObjectOutputStream chatOut1 = new ObjectOutputStream(player1Chat.getOutputStream());
+                        ObjectOutputStream chatOut2 = new ObjectOutputStream(player2Chat.getOutputStream());
+                        ObjectInputStream chatIn1 = new ObjectInputStream(player1Chat.getInputStream());
+                        ObjectInputStream chatIn2 = new ObjectInputStream(player2Chat.getInputStream());
 
-                ObjectOutputStream chatOut1 = new ObjectOutputStream(player1Chat.getOutputStream());
-                ObjectOutputStream chatOut2 = new ObjectOutputStream(player2Chat.getOutputStream());
-                ObjectInputStream chatIn1 = new ObjectInputStream(player1Chat.getInputStream());
-                ObjectInputStream chatIn2 = new ObjectInputStream(player2Chat.getInputStream());
-
-                System.out.println("Starting Game...");
-                gameThread = new Thread(() -> startGameServer(player1, player2, chatOut1, chatOut2));
-                gameThread.start();
-                new Thread(() -> {
-                    try {
-                        handleChat(chatOut1, chatOut2, chatIn1, chatIn2);
-                    } catch (InterruptedException e) {
-                        System.out.println("GAME CLOSED " + e);
+                        System.out.println("Starting Game...");
+                        gameThread = new Thread(() -> startGameServer(player1, player2, chatOut1, chatOut2));
+                        gameThread.start();
+                        chatThread = new Thread(() -> {
+                            try {
+                                handleChat(chatOut1, chatOut2, chatIn1, chatIn2);
+                            } catch (InterruptedException e) {
+                                System.out.println("GAME CLOSED " + e);
+                            }
+                        });
+                        chatThread.start();
+                        threadList.add(gameThread);
+                        threadList.add(chatThread);
+                        System.out.println("2 threads added");
                     }
-                }).start();
-            }
+                } catch (IOException e) {
+                    running = false;
+                }
+            });
+            acceptingThread.start();
         } catch (IOException e) {
             running = false;
         }
     }
 
-    public void shutdownSever() throws IOException {
-        running = false;
-        player1.close();
-        player2.close();
-        player1Chat.close();
-        player2Chat.close();
-        serverSocketGame.close();
-        serverSocketChat.close();
-        gameThread.interrupt();
-    }
+
+            public void shutdownSever() throws IOException {
+                int index = 1;
+                running = false;
+
+                if (player1 != null) player1.close();
+                if (player2 != null) player2.close();
+                if (player1Chat != null) player1Chat.close();
+                if (player2Chat != null) player2Chat.close();
+
+                for (ServerSocket s : socketList) {
+                    s.close();
+                    System.out.println("shutdown " + index + " sockets");
+                    index++;
+                }
+
+                index = 1;
+                for (Thread t : threadList) {
+                    t.interrupt();
+                    System.out.println("shutdown " + index + " threads");
+                    index++;
+                }
+                if (acceptingThread != null) {
+                    acceptingThread.interrupt();
+                }
+            }
 
     private void handleChat(ObjectOutputStream out1, ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2) throws InterruptedException {
 
@@ -176,18 +210,27 @@ public class Server {
 
                 while (correctSelections < totalTiles / 2) {
 
-
+//Spelare 1
                     while (running) {
                         Object flip1 = in1.readObject();
+                        //Första klicket
                         out2.writeObject(flip1);
+                        //Första klicket skickas till andra spelaren
 
                         Flip flip2 = (Flip) in1.readObject();
+                        //Andra klicket
+
                         if (flip2.isCorrect()) {
+                            //Om andra klicket korrekt
                             out2.writeObject(flip2);
+                            //Skicka till andra spelaren
 
 
                             player1Score = player1Score + nextScore;
+                            //lägger på korrekta summan till spelaren
+
                             correctSelections++;
+                            //totala poäng, jämförs med totala mängden som finns att vinna
                             System.out.println(correctSelections + " " + "correct selection");
 
                             out1.writeObject(new Score(player1Score, player2Score));
@@ -292,6 +335,7 @@ public class Server {
                 }
             }
         } catch (IOException e) {
+            running=false;
             try {
                 player1.close();
                 player2.close();

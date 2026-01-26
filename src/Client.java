@@ -1,4 +1,6 @@
 
+import org.w3c.dom.ls.LSOutput;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.EOFException;
@@ -21,6 +23,12 @@ public class Client {
     private int p1Score;
     private int p2Score;
 
+    Thread listenLoop = null;
+    Thread chatLoop = null;
+
+    Socket gameSocket = null;
+    Socket chatSocket = null;
+
     private ObjectOutputStream gameOut;
     private ObjectOutputStream chatOut;
 
@@ -28,36 +36,50 @@ public class Client {
     private ObjectInputStream chatIn;
 
     public boolean firstGame = true;
+    private volatile boolean running = true;
 
     public Client() {
 
     }
 
-    public void disconnect(){
-
+    public void disconnect() {
+        running = false;
         try {
-            if (gameOut != null) gameOut.close();
-            if (gameIn != null) gameIn.close();
-            if (chatOut != null) chatOut.close();
-            if (chatIn != null) chatIn.close();
+            if (gameSocket != null)
+            {gameSocket.close();} else {
+                System.out.println("Gamesocket was not closed");}
+            if (chatSocket != null) {chatSocket.close();} else {
+            System.out.println("chatSocket was not closed");}
+            if (gameOut != null) {gameOut.close();} else {
+            System.out.println("game out was not closed");}
+            if (gameIn != null) {gameIn.close();} else {
+            System.out.println("game in was not closed");}
+            if (chatOut != null) {chatOut.close();} else {
+            System.out.println("chat out was not closed");}
+            if (chatIn != null) {chatIn.close();} else {
+            System.out.println("chat in was not closed");}
         } catch (IOException e) {
 
         }
-        gameOut = null;
-        gameIn = null;
-        chatOut = null;
-        chatIn = null;
 
+        if (listenLoop != null) {
+            listenLoop.interrupt();
+        } else {
+            System.out.println("listenloop was not interrupted");}
+        if (chatLoop != null) {
+            chatLoop.interrupt();
+        } else {
+            System.out.println("chatloop was not interrupted");
+        }
 
     }
 
     public void connect() {
-
-        disconnect();
+        running = true;
 
         try {
-            Socket gameSocket = new Socket(hostname, port);
-            Socket chatSocket = new Socket(hostname, chatPort);
+            gameSocket = new Socket(hostname, port);
+            chatSocket = new Socket(hostname, chatPort);
 
             this.gameOut = new ObjectOutputStream(gameSocket.getOutputStream());
             this.chatOut = new ObjectOutputStream(chatSocket.getOutputStream());
@@ -66,7 +88,7 @@ public class Client {
             this.gameIn = new ObjectInputStream(gameSocket.getInputStream());
             this.chatIn = new ObjectInputStream(chatSocket.getInputStream());
 
-            new Thread(() -> {
+            listenLoop = new Thread(() -> {
                 try {
                     listenLoop(gameIn);
                 } catch (EOFException f) {
@@ -75,7 +97,7 @@ public class Client {
                             gui.otherPlayerDisconnected();
                             System.out.println("EOFEXCEPTION");
                         });
-                    }catch (Exception ignored){
+                    } catch (Exception ignored) {
 
                     }
                 } catch (SocketException s) {
@@ -84,17 +106,25 @@ public class Client {
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
-            }).start();
+            });
+            listenLoop.setDaemon(true);
 
-            new Thread(() -> {
+            chatLoop = new Thread(() -> {
                 try {
                     chatLoop(chatIn);
-                } catch (SocketException f){
+                } catch (SocketException f) {
                     System.out.println("Socket Exception in chat");
                 } catch (IOException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                    if(!running) {
+                        throw new RuntimeException(e);
+                    }
                 }
-            }).start();
+            });
+
+            chatLoop.setDaemon(true);
+
+            listenLoop.start();
+            chatLoop.start();
 
 
         } catch (IOException e) {
@@ -103,7 +133,9 @@ public class Client {
     }
 
     public void listenLoop(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        while (true) {
+
+
+        while (running) {
             Object msg = in.readObject();
 
             if (msg instanceof Integer tiles) {
@@ -189,35 +221,43 @@ public class Client {
                 p2Score = score.getP2Score();
             }
         }
+        System.out.println("LISTENLOOP EXITED CORRECTLY");
     }
 
     public void chatLoop(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        while (true) {
-            Object msg = in.readObject();
+        try {
+            while (running) {
+                Object msg = in.readObject();
 
-            if (msg instanceof Message) {
-                String chatMessage = ((Message) msg).getChatMessage();
-                System.out.println(chatMessage);
-                gui.chat.append(chatMessage);
+                if (msg instanceof Message) {
+                    String chatMessage = ((Message) msg).getChatMessage();
+                    System.out.println(chatMessage);
+                    gui.chat.append(chatMessage);
+                }
             }
+        }catch (SocketException | EOFException f){
+            return;
         }
+        System.out.println("CHATLOOP EXITED CORRECTLY");
     }
 
     public void sendOb(Object o) throws IOException {
-        if(gameOut!=null) {
+        if (gameOut != null) {
             gameOut.writeObject(o);
         } else {
             System.out.println("GAMEOUT WAS NULL");
         }
     }
 
-    public void resetFirstGame(){
-        firstGame=true;
+    public void resetFirstGame() {
+        firstGame = true;
     }
 
     public void sendChatMessage(Message msg) throws IOException {
-        chatOut.writeObject(msg);
-        chatOut.flush();
+        if (chatOut != null) {
+            chatOut.writeObject(msg);
+            chatOut.flush();
+        }
     }
 
     public void setGUI(GUI gui) {
