@@ -113,7 +113,7 @@ public class Client {
                 try {
                     chatLoop(chatIn);
                 } catch (SocketException f) {
-                    System.out.println("Socket Exception in chat");
+                    System.out.println("Socket Exception in chat " + f);
                 } catch (IOException | ClassNotFoundException e) {
                     if(!running) {
                         throw new RuntimeException(e);
@@ -236,6 +236,7 @@ public class Client {
                 }
             }
         }catch (SocketException | EOFException f){
+            System.out.println("ERROR" + f);
             return;
         }
         System.out.println("CHATLOOP EXITED CORRECTLY");

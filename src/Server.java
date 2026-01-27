@@ -12,7 +12,8 @@ public class Server {
     private String p1name;
     private String p2name;
 
-    public static String ip = null;
+    public static boolean classic = true;
+
 
     int gamePort = 5432;
     int chatPort = 5433;
@@ -110,31 +111,31 @@ public class Server {
     }
 
 
-            public void shutdownSever() throws IOException {
-                int index = 1;
-                running = false;
+    public void shutdownSever() throws IOException {
+        int index = 1;
+        running = false;
 
-                if (player1 != null) player1.close();
-                if (player2 != null) player2.close();
-                if (player1Chat != null) player1Chat.close();
-                if (player2Chat != null) player2Chat.close();
+        if (player1 != null) player1.close();
+        if (player2 != null) player2.close();
+        if (player1Chat != null) player1Chat.close();
+        if (player2Chat != null) player2Chat.close();
 
-                for (ServerSocket s : socketList) {
-                    s.close();
-                    System.out.println("shutdown " + index + " sockets");
-                    index++;
-                }
+        for (ServerSocket s : socketList) {
+            s.close();
+            System.out.println("shutdown " + index + " sockets");
+            index++;
+        }
 
-                index = 1;
-                for (Thread t : threadList) {
-                    t.interrupt();
-                    System.out.println("shutdown " + index + " threads");
-                    index++;
-                }
-                if (acceptingThread != null) {
-                    acceptingThread.interrupt();
-                }
-            }
+        index = 1;
+        for (Thread t : threadList) {
+            t.interrupt();
+            System.out.println("shutdown " + index + " threads");
+            index++;
+        }
+        if (acceptingThread != null) {
+            acceptingThread.interrupt();
+        }
+    }
 
     private void handleChat(ObjectOutputStream out1, ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2) throws InterruptedException {
 
@@ -210,89 +211,11 @@ public class Server {
 
                 while (correctSelections < totalTiles / 2) {
 
-//Spelare 1
-                    while (running) {
-                        Object flip1 = in1.readObject();
-                        //Första klicket
-                        out2.writeObject(flip1);
-                        //Första klicket skickas till andra spelaren
-
-                        Flip flip2 = (Flip) in1.readObject();
-                        //Andra klicket
-
-                        if (flip2.isCorrect()) {
-                            //Om andra klicket korrekt
-                            out2.writeObject(flip2);
-                            //Skicka till andra spelaren
-
-
-                            player1Score = player1Score + nextScore;
-                            //lägger på korrekta summan till spelaren
-
-                            correctSelections++;
-                            //totala poäng, jämförs med totala mängden som finns att vinna
-                            System.out.println(correctSelections + " " + "correct selection");
-
-                            out1.writeObject(new Score(player1Score, player2Score));
-                            out2.writeObject(new Score(player2Score, player1Score));
-                            nextScore = 5;
-                            break;
-                        } else {
-                            if (nextScore > 1) {
-                                nextScore--;
-                            }
-                        }
-                        out2.writeObject(flip2);
-
+                    if(classic){
+                        classic(out1, out2, in1, in2);
+                    } else {
+                        revamped(out1, out2, in1, in2);
                     }
-
-
-                    if (correctSelections == totalTiles / 2) {
-                        out1.writeObject(Action.sendAction.LOCK);
-                        out2.writeObject(Action.sendAction.LOCK);
-                        break;
-                    }
-
-                    out1.writeObject(Action.sendAction.LOCK);
-                    out2.writeObject(Action.sendAction.UNLOCK);
-
-
-                    //HÄR BYTER SPELAREN
-
-                    while (running) {
-                        Object flip1 = in2.readObject();
-                        out1.writeObject(flip1);
-
-                        Flip flip2 = (Flip) in2.readObject();
-                        if (flip2.isCorrect()) {
-                            out1.writeObject(flip2);
-
-                            player2Score = player2Score + nextScore;
-
-                            correctSelections++;
-                            System.out.println(correctSelections + " " + "correct selection");
-                            out1.writeObject(new Score(player1Score, player2Score));
-                            out2.writeObject(new Score(player2Score, player1Score));
-                            nextScore = 5;
-                            break;
-                        } else {
-                            if (nextScore > 1) {
-                                nextScore--;
-                            }
-                        }
-                        out1.writeObject(flip2);
-
-                    }
-
-
-                    if (correctSelections == totalTiles / 2) {
-                        out1.writeObject(Action.sendAction.LOCK);
-                        out2.writeObject(Action.sendAction.LOCK);
-                        break;
-                    }
-
-                    out2.writeObject(Action.sendAction.LOCK);
-                    out1.writeObject(Action.sendAction.UNLOCK);
 
                 }
                 while (running) {
@@ -335,7 +258,7 @@ public class Server {
                 }
             }
         } catch (IOException e) {
-            running=false;
+            running = false;
             try {
                 player1.close();
                 player2.close();
@@ -348,6 +271,193 @@ public class Server {
         } finally {
             firstGame = true;
         }
+    }
+
+    public void classic(ObjectOutputStream out1,ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2 ) throws IOException, ClassNotFoundException {
+
+//Spelare 1
+        while (running) {
+            Object flip1 = in1.readObject();
+            //Första klicket
+            out2.writeObject(flip1);
+            //Första klicket skickas till andra spelaren
+
+            Flip flip2 = (Flip) in1.readObject();
+            //Andra klicket
+
+            out2.writeObject(flip2);
+            if (flip2.isCorrect()) {
+                //Om andra klicket korrekt
+
+                //Skicka till andra spelaren
+
+
+                player1Score = player1Score + 1;
+                //lägger på korrekta summan till spelaren
+
+                correctSelections++;
+                //totala poäng, jämförs med totala mängden som finns att vinna
+                System.out.println(correctSelections + " " + "correct selection");
+
+                out1.writeObject(new Score(player1Score, player2Score));
+                out2.writeObject(new Score(player2Score, player1Score));
+
+                if (correctSelections == totalTiles / 2) {
+                    break;
+                }
+
+            } else {
+                out1.writeObject(Action.sendAction.LOCK);
+                break;
+            }
+        }
+
+
+            if (correctSelections == totalTiles / 2) {
+                out1.writeObject(Action.sendAction.LOCK);
+                out2.writeObject(Action.sendAction.LOCK);
+                return;
+            } else {
+                System.out.println("NO WIN YET");
+                System.out.println(totalTiles);
+            }
+
+
+            out1.writeObject(Action.sendAction.LOCK);
+            out2.writeObject(Action.sendAction.UNLOCK);
+
+
+            //HÄR BYTER SPELAREN
+
+            while (running) {
+                Object flip1 = in2.readObject();
+                out1.writeObject(flip1);
+
+                Flip flip2 = (Flip) in2.readObject();
+                out1.writeObject(flip2);
+
+                if (flip2.isCorrect()) {
+
+
+                    player2Score = player2Score + 1;
+
+                    correctSelections++;
+
+                    System.out.println(correctSelections + " " + "correct selection");
+                    out1.writeObject(new Score(player1Score, player2Score));
+                    out2.writeObject(new Score(player2Score, player1Score));
+                    if (correctSelections == totalTiles / 2) {
+                        break;
+                    }
+                } else {
+                    out2.writeObject(Action.sendAction.LOCK);
+                    break;
+                }
+
+            }
+
+
+            if (correctSelections == totalTiles / 2) {
+                out1.writeObject(Action.sendAction.LOCK);
+                out2.writeObject(Action.sendAction.LOCK);
+                return;
+            } else {
+                System.out.println("NO WIN YET");
+                System.out.println(totalTiles);
+            }
+
+            out2.writeObject(Action.sendAction.LOCK);
+            out1.writeObject(Action.sendAction.UNLOCK);
+
+    }
+
+
+    public void revamped(ObjectOutputStream out1,ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2 ) throws IOException, ClassNotFoundException {
+
+
+//Spelare 1
+        while (running) {
+            Object flip1 = in1.readObject();
+            //Första klicket
+            out2.writeObject(flip1);
+            //Första klicket skickas till andra spelaren
+
+            Flip flip2 = (Flip) in1.readObject();
+            //Andra klicket
+
+            if (flip2.isCorrect()) {
+                //Om andra klicket korrekt
+                out2.writeObject(flip2);
+                //Skicka till andra spelaren
+
+
+                player1Score = player1Score + nextScore;
+                //lägger på korrekta summan till spelaren
+
+                correctSelections++;
+                //totala poäng, jämförs med totala mängden som finns att vinna
+                System.out.println(correctSelections + " " + "correct selection");
+
+                out1.writeObject(new Score(player1Score, player2Score));
+                out2.writeObject(new Score(player2Score, player1Score));
+                nextScore = 5;
+                break;
+            } else {
+                if (nextScore > 1) {
+                    nextScore--;
+                }
+            }
+            out2.writeObject(flip2);
+
+        }
+
+
+        if (correctSelections == totalTiles / 2) {
+            out1.writeObject(Action.sendAction.LOCK);
+            out2.writeObject(Action.sendAction.LOCK);
+            return;
+        }
+
+        out1.writeObject(Action.sendAction.LOCK);
+        out2.writeObject(Action.sendAction.UNLOCK);
+
+
+        //HÄR BYTER SPELAREN
+
+        while (running) {
+            Object flip1 = in2.readObject();
+            out1.writeObject(flip1);
+
+            Flip flip2 = (Flip) in2.readObject();
+            if (flip2.isCorrect()) {
+                out1.writeObject(flip2);
+
+                player2Score = player2Score + nextScore;
+
+                correctSelections++;
+                System.out.println(correctSelections + " " + "correct selection");
+                out1.writeObject(new Score(player1Score, player2Score));
+                out2.writeObject(new Score(player2Score, player1Score));
+                nextScore = 5;
+                break;
+            } else {
+                if (nextScore > 1) {
+                    nextScore--;
+                }
+            }
+            out1.writeObject(flip2);
+
+        }
+
+
+        if (correctSelections == totalTiles / 2) {
+            out1.writeObject(Action.sendAction.LOCK);
+            out2.writeObject(Action.sendAction.LOCK);
+            return;
+        }
+
+        out2.writeObject(Action.sendAction.LOCK);
+        out1.writeObject(Action.sendAction.UNLOCK);
     }
 
 

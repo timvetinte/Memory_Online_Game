@@ -10,8 +10,12 @@ public void ServerGUI() {
     JButton easy = new JButton("EASY 16");
     JButton medium = new JButton("MEDIUM 36 ");
     JButton hard = new JButton("HARD 64");
+
+    JButton classic = new JButton("Classic");
+    JButton revamped = new JButton("Revamped");
+
     JPanel buttonPanel = new JPanel(new FlowLayout());
-    serverWindow.add(buttonPanel);
+    JPanel gameModePanel = new JPanel(new FlowLayout());
 
     AtomicReference<Server> server = new AtomicReference<>();
 
@@ -19,19 +23,28 @@ public void ServerGUI() {
     buttonPanel.add(medium);
     buttonPanel.add(hard);
 
+    gameModePanel.add(classic);
+    gameModePanel.add(revamped);
+
     JPanel labelPanel = new JPanel(new BorderLayout());
     JLabel chooseDifficulty = new JLabel("Choose a difficulty!", SwingConstants.CENTER);
     labelPanel.add(chooseDifficulty);
     labelPanel.setBorder(new EmptyBorder(15, 15, 10, 15));
 
-    JPanel startButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    JPanel centerPanel = new JPanel();
+    JPanel startButtonPanel = new JPanel();
+    centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+
+    centerPanel.add(buttonPanel);
+    centerPanel.add(gameModePanel);
+
     JButton startServer = new JButton("Start Server");
     JButton closeServer = new JButton("Close Server");
     startButtonPanel.add(startServer);
     startButtonPanel.setBorder(new EmptyBorder(0, 15, 15, 15));
 
     serverWindow.add(labelPanel, BorderLayout.NORTH);
-    serverWindow.add(buttonPanel, BorderLayout.CENTER);
+    serverWindow.add(centerPanel, BorderLayout.CENTER);
     serverWindow.add(startButtonPanel, BorderLayout.SOUTH);
 
     serverWindow.setSize(400, 200);
@@ -39,6 +52,25 @@ public void ServerGUI() {
     serverWindow.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
     easy.setEnabled(false);
+    classic.setEnabled(false);
+
+    classic.addActionListener(e -> {
+
+        Server.classic=true;
+        revamped.setEnabled(true);
+        classic.setEnabled(false);
+
+    });
+
+    revamped.addActionListener(e->{
+
+        Server.classic=false;
+        revamped.setEnabled(false);
+        classic.setEnabled(true);
+        serverWindow.repaint();
+        serverWindow.revalidate();
+
+    });
 
 
     easy.addActionListener(e -> {
@@ -77,10 +109,14 @@ public void ServerGUI() {
         easy.setEnabled(false);
         medium.setEnabled(false);
         hard.setEnabled(false);
+        classic.setEnabled(false);
+        revamped.setEnabled(false);
         startButtonPanel.remove(startServer);
         startButtonPanel.add(closeServer);
-        startButtonPanel.repaint();
-        startButtonPanel.revalidate();
+        centerPanel.repaint();
+        centerPanel.revalidate();
+        buttonPanel.revalidate();
+        buttonPanel.repaint();
 
         new Thread(() -> server.set(new Server())).start();
 
@@ -109,13 +145,23 @@ public void ServerGUI() {
         medium.setEnabled(true);
         hard.setEnabled(true);
 
+        if(Server.classic){
+            revamped.setEnabled(true);
+        } else {
+            classic.setEnabled(true);
+        }
+
         switch (Server.totalTiles) {
             case 16 -> easy.setEnabled(false);
             case 36 -> medium.setEnabled(false);
             case 64 -> hard.setEnabled(false);
         }
-        startButtonPanel.repaint();
-        startButtonPanel.revalidate();
+        centerPanel.repaint();
+        centerPanel.revalidate();
+        serverWindow.revalidate();
+        serverWindow.repaint();
+        buttonPanel.revalidate();
+        buttonPanel.repaint();
     });
 }
 

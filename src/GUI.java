@@ -198,9 +198,6 @@ public class GUI extends JFrame implements ActionListener {
                     //Sets so it's time for a new first click
                     first = true;
 
-                    //Updates the score
-                    //NEEDS TO BE UPDATED SO IT IS AN OBJECT BEING SENT TO THE SERVER
-                    correctSelections++;
 
                     //Sends the click or flip, doesn't update the other players to be disabled
                     //NEEDS TO BE FIXED
@@ -213,7 +210,7 @@ public class GUI extends JFrame implements ActionListener {
                     //Reveals the text or symbol of click
                     setButtonSymbolText(button, index);
                     //Locks player out of making any further moves for 850 ms
-                    buttonLock = true;
+
                     try {
 
                         //Sends the click
@@ -232,8 +229,6 @@ public class GUI extends JFrame implements ActionListener {
                         //Sets it to first click again
                         first = true;
 
-                        //Removes the lock
-                        buttonLock = false;
                     });
                     t.setRepeats(false);
                     t.start();
