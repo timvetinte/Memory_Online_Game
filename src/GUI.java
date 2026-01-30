@@ -29,6 +29,8 @@ public class GUI extends JFrame implements ActionListener {
     JDialog dialog = null;
     JFrame winWindow = null;
 
+    public JButton ruleButton = new JButton("Rules");
+
     private boolean firstGame = true;
 
 
@@ -79,8 +81,8 @@ public class GUI extends JFrame implements ActionListener {
 
                 try {
                     confirmDisconnect();
-                } catch (IOException ex) {
-                    System.out.println("CONFIRM DISCONNECT IOEXCEPTION");
+                } catch (IOException ignored) {
+
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -115,20 +117,19 @@ public class GUI extends JFrame implements ActionListener {
         totalTiles = tiles;
     }
 
-    public void setTileFontSize(int difficulty){
+    public void setTileFontSize(int difficulty) {
         int index = 0;
-        if(difficulty==1) {
+        if (difficulty == 1) {
             for (JButton b : buttonList) {
                 b.setFont(new Font("Symbola", Font.PLAIN, 45));
             }
-        } else if (difficulty==2) {
+        } else if (difficulty == 2) {
             for (JButton b : buttonList) {
                 b.setFont(new Font("Symbola", Font.PLAIN, 35));
             }
-        } else if (difficulty==3){
+        } else if (difficulty == 3) {
             for (JButton b : buttonList) {
                 b.setFont(new Font("Symbola", Font.PLAIN, 22));
-                System.out.println(index);
                 index++;
             }
         }
@@ -157,11 +158,11 @@ public class GUI extends JFrame implements ActionListener {
                 }
             });
         }
-        if(totalTiles==64){
+        if (totalTiles == 64) {
             setTileFontSize(3);
-        } else if (totalTiles==36){
+        } else if (totalTiles == 36) {
             setTileFontSize(2);
-        } else if (totalTiles==16) {
+        } else if (totalTiles == 16) {
             setTileFontSize(1);
         }
 
@@ -185,18 +186,13 @@ public class GUI extends JFrame implements ActionListener {
                 //Checks that player doesn't click on the same button twice
             } else if (currentIndex != index) {
 
+                buttonLock=true;
+
                 //Checks that player makes a correct selection
                 if (cardList.get(currentIndex).getSymbol().equals(cardList.get(index).getSymbol())) {
 
                     //"Reveals" the text or symbol of the second button
                     setButtonSymbolText(button, index);
-
-                    //Disables both buttons since they are correct
-                    buttonList.get(index).setEnabled(false);
-                    buttonList.get(currentIndex).setEnabled(false);
-
-                    //Sets so it's time for a new first click
-                    first = true;
 
 
                     //Sends the click or flip, doesn't update the other players to be disabled
@@ -204,12 +200,21 @@ public class GUI extends JFrame implements ActionListener {
                     client.sendOb(new Flip(index, currentIndex, true, false));
 
 
+                    buttonList.get(index).setEnabled(false);
+                    buttonList.get(currentIndex).setEnabled(false);
+
+                        first = true;
+
+
                     //Player doesnt make correct selection
+                    buttonLock=false;
                 } else {
+
 
                     //Reveals the text or symbol of click
                     setButtonSymbolText(button, index);
                     //Locks player out of making any further moves for 850 ms
+
 
                     try {
 
@@ -219,7 +224,10 @@ public class GUI extends JFrame implements ActionListener {
                         otherPlayerDisconnected();
                         return;
                     }
+
                     Timer t = new Timer(1000, e -> {
+
+
 
                         //Sets both to blank again
                         buttonList.get(index).setText(null);
@@ -228,6 +236,7 @@ public class GUI extends JFrame implements ActionListener {
 
                         //Sets it to first click again
                         first = true;
+                        buttonLock=false;
 
                     });
                     t.setRepeats(false);
@@ -269,6 +278,8 @@ public class GUI extends JFrame implements ActionListener {
         JTextField enterIP = new JTextField(20);
 
         textFieldPanel.add(userDialogue);
+
+        userWindow.setLocationRelativeTo(null);
 
         textFieldPanel.add(enterIP);
         enterIP.setEditable(false);
@@ -320,19 +331,21 @@ public class GUI extends JFrame implements ActionListener {
             enterName.setText("Looking for other player.");
             enterName.setFocusable(false);
             connect.setFocusable(false);
-            revalidate();
-            repaint();
+            userWindow.revalidate();
+            userWindow.repaint();
 
             SwingUtilities.invokeLater(() -> {
+
                 client.connect();
 
                 try {
                     client.sendOb(userId);
-                } catch (IOException ex) {
-                    System.out.println("Could not send userID");
+                } catch (IOException ignored) {
+
                 }
 
                 userWindow.dispose();
+                userWindow.setVisible(false);
             });
         });
     }
@@ -422,10 +435,8 @@ public class GUI extends JFrame implements ActionListener {
 
     public void disableButtons(boolean yesno) {
         if (yesno) {
-            System.out.println("ButtonList size: " + buttonList.size());
             for (JButton b : buttonList) {
                 b.setEnabled(false);
-                System.out.println("DISABLED: " + b.getText());
             }
         } else {
             for (JButton b : buttonList) {
@@ -439,17 +450,17 @@ public class GUI extends JFrame implements ActionListener {
         disableButtons(true);
         client.disconnect();
 
-        if(dialog!=null){
+        if (dialog != null) {
             dialog.dispose();
         }
-        if(winWindow!=null){
+        if (winWindow != null) {
             winWindow.dispose();
         }
 
-        int result = 0;
+        int result;
         try {
             result = JOptionPane.showConfirmDialog(
-                    this,
+                    null,
                     "Other player disconnected, New Game?",
                     "Game Over",
                     JOptionPane.YES_NO_OPTION
@@ -470,9 +481,8 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void confirmDisconnect() throws IOException, InterruptedException {
-        System.out.println("START OF CONFIRM ISSUE");
         disableElements(false);
-        dialog = new JDialog (this, "Game Over", true);
+        dialog = new JDialog(this, "Game Over", true);
 
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -510,7 +520,10 @@ public class GUI extends JFrame implements ActionListener {
         p2Userid = null;
         chat.setText("");
 
-        enterUser();
+        Client newClient = new Client();
+        newClient.setGUI(this);
+        this.client = newClient;
+        this.enterUser();
     }
 
     public void disableElements(boolean yesno) {

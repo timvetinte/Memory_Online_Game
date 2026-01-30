@@ -1,5 +1,5 @@
+import javax.swing.*;
 import java.io.*;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.net.ServerSocket;
@@ -24,11 +24,6 @@ public class Server {
     ServerSocket serverSocketGame;
     ServerSocket serverSocketChat;
 
-    private Socket player1;
-    private Socket player2;
-    private Socket player1Chat;
-    private Socket player2Chat;
-
     private Thread gameThread;
     private Thread chatThread;
     private Thread acceptingThread;
@@ -36,11 +31,11 @@ public class Server {
     int playAgain = 0;
 
     ArrayList<Thread> threadList = new ArrayList();
-    ArrayList<ServerSocket> socketList = new ArrayList();
-
+    ArrayList<ServerSocket> serverSocketList = new ArrayList();
+    ArrayList<Socket> socketList = new ArrayList();
 
     private boolean firstGame = true;
-    private volatile boolean running = true;
+
 
     int nextScore = 5;
 
@@ -50,7 +45,7 @@ public class Server {
     ArrayList<tiles> cardList = new ArrayList<>();
 
     public Server() {
-
+        System.out.println("CREATED SERVER");
 
         try {
             serverSocketGame = new ServerSocket();
@@ -62,23 +57,29 @@ public class Server {
             serverSocketChat.setReuseAddress(true);
             serverSocketChat.bind(new InetSocketAddress(chatPort));
 
-            socketList.add(serverSocketChat);
-            socketList.add(serverSocketGame);
+            serverSocketList.add(serverSocketChat);
+            serverSocketList.add(serverSocketGame);
 
 
             firstGame = true;
             acceptingThread = new Thread(() -> {
+                System.out.println("ACCEPT THREAD");
                 try {
-                    while (running) {
+                    while (true) {
                         System.out.println("Waiting for player 1");
-                        player1 = serverSocketGame.accept();
+                        Socket player1 = serverSocketGame.accept();
                         System.out.println("Player one connected");
 
                         System.out.println("Waiting for player 2");
-                        player2 = serverSocketGame.accept();
+                        Socket player2 = serverSocketGame.accept();
                         System.out.println("Player two connected");
-                        player1Chat = serverSocketChat.accept();
-                        player2Chat = serverSocketChat.accept();
+                        Socket player1Chat = serverSocketChat.accept();
+                        Socket player2Chat = serverSocketChat.accept();
+
+                        socketList.add(player1);
+                        socketList.add(player2);
+                        socketList.add(player1Chat);
+                        socketList.add(player2Chat);
 
                         ObjectOutputStream chatOut1 = new ObjectOutputStream(player1Chat.getOutputStream());
                         ObjectOutputStream chatOut2 = new ObjectOutputStream(player2Chat.getOutputStream());
@@ -86,55 +87,58 @@ public class Server {
                         ObjectInputStream chatIn2 = new ObjectInputStream(player2Chat.getInputStream());
 
                         System.out.println("Starting Game...");
-                        gameThread = new Thread(() -> startGameServer(player1, player2, chatOut1, chatOut2));
+                        gameThread = new Thread(() -> {
+                            try {
+                                startGameServer(player1, player2, chatOut1, chatOut2);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                         gameThread.start();
                         chatThread = new Thread(() -> {
                             try {
                                 handleChat(chatOut1, chatOut2, chatIn1, chatIn2);
                             } catch (InterruptedException e) {
-                                System.out.println("GAME CLOSED " + e);
                             }
                         });
                         chatThread.start();
                         threadList.add(gameThread);
                         threadList.add(chatThread);
-                        System.out.println("2 threads added");
                     }
                 } catch (IOException e) {
-                    running = false;
+                    System.out.println(e);
                 }
             });
             acceptingThread.start();
         } catch (IOException e) {
-            running = false;
+
         }
     }
 
 
-    public void shutdownSever() throws IOException {
+    public void shutdownSever() throws IOException, InterruptedException {
         int index = 1;
-        running = false;
 
-        if (player1 != null) player1.close();
-        if (player2 != null) player2.close();
-        if (player1Chat != null) player1Chat.close();
-        if (player2Chat != null) player2Chat.close();
+        for(Socket s: socketList){
+            if(s!=null){
+                s.close();
+            }
+        }
 
-        for (ServerSocket s : socketList) {
+        for (ServerSocket s : serverSocketList) {
             s.close();
-            System.out.println("shutdown " + index + " sockets");
             index++;
         }
 
         index = 1;
         for (Thread t : threadList) {
             t.interrupt();
-            System.out.println("shutdown " + index + " threads");
             index++;
         }
         if (acceptingThread != null) {
             acceptingThread.interrupt();
         }
+
     }
 
     private void handleChat(ObjectOutputStream out1, ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2) throws InterruptedException {
@@ -148,7 +152,7 @@ public class Server {
 
     private void messageReceiver(ObjectInputStream in, ObjectOutputStream out) {
         try {
-            while (running) {
+            while (true) {
                 Object msg = in.readObject();
                 if (msg instanceof Message) {
                     out.writeObject(msg);
@@ -157,12 +161,12 @@ public class Server {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            running = false;
+
         }
     }
 
 
-    private void startGameServer(Socket player1, Socket player2, ObjectOutputStream chatOut1, ObjectOutputStream chatOut2) {
+    private void startGameServer(Socket player1, Socket player2, ObjectOutputStream chatOut1, ObjectOutputStream chatOut2) throws InterruptedException {
 
         try (ObjectOutputStream out1 = new ObjectOutputStream(player1.getOutputStream());
              ObjectOutputStream out2 = new ObjectOutputStream(player2.getOutputStream());
@@ -170,7 +174,7 @@ public class Server {
              ObjectInputStream in2 = new ObjectInputStream(player2.getInputStream())) {
 
 
-            while (running) {
+            while (true) {
                 correctSelections = 0;
                 player1Score = 0;
                 player2Score = 0;
@@ -218,7 +222,7 @@ public class Server {
                     }
 
                 }
-                while (running) {
+                while (true) {
 
                     if (player1Score > player2Score) {
                         chatOut1.writeObject(new Message(p1name + " won with: " + player1Score + " points!\n"));
@@ -258,25 +262,25 @@ public class Server {
                 }
             }
         } catch (IOException e) {
-            running = false;
+
             try {
                 player1.close();
                 player2.close();
-            } catch (IOException ex) {
+            } catch (IOException ignored) {
             }
-            System.out.println("IOException");
 
-        } catch (ClassNotFoundException e) {
-            System.out.println("ClassNotFoundException");
+
+        } catch (ClassNotFoundException ignored) {
+
         } finally {
             firstGame = true;
         }
     }
 
-    public void classic(ObjectOutputStream out1,ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2 ) throws IOException, ClassNotFoundException {
+    public void classic(ObjectOutputStream out1,ObjectOutputStream out2, ObjectInputStream in1, ObjectInputStream in2 ) throws IOException, ClassNotFoundException, InterruptedException {
 
 //Spelare 1
-        while (running) {
+        while (true) {
             Object flip1 = in1.readObject();
             //Första klicket
             out2.writeObject(flip1);
@@ -286,6 +290,7 @@ public class Server {
             //Andra klicket
 
             out2.writeObject(flip2);
+
             if (flip2.isCorrect()) {
                 //Om andra klicket korrekt
 
@@ -297,7 +302,6 @@ public class Server {
 
                 correctSelections++;
                 //totala poäng, jämförs med totala mängden som finns att vinna
-                System.out.println(correctSelections + " " + "correct selection");
 
                 out1.writeObject(new Score(player1Score, player2Score));
                 out2.writeObject(new Score(player2Score, player1Score));
@@ -308,8 +312,13 @@ public class Server {
 
             } else {
                 out1.writeObject(Action.sendAction.LOCK);
+                out2.writeObject(Action.sendAction.UNLOCK);
+                Thread.sleep(1000);
+                out1.writeObject(Action.sendAction.LOCK);
+
                 break;
             }
+
         }
 
 
@@ -317,19 +326,11 @@ public class Server {
                 out1.writeObject(Action.sendAction.LOCK);
                 out2.writeObject(Action.sendAction.LOCK);
                 return;
-            } else {
-                System.out.println("NO WIN YET");
-                System.out.println(totalTiles);
             }
-
-
-            out1.writeObject(Action.sendAction.LOCK);
-            out2.writeObject(Action.sendAction.UNLOCK);
-
 
             //HÄR BYTER SPELAREN
 
-            while (running) {
+            while (true) {
                 Object flip1 = in2.readObject();
                 out1.writeObject(flip1);
 
@@ -343,7 +344,7 @@ public class Server {
 
                     correctSelections++;
 
-                    System.out.println(correctSelections + " " + "correct selection");
+
                     out1.writeObject(new Score(player1Score, player2Score));
                     out2.writeObject(new Score(player2Score, player1Score));
                     if (correctSelections == totalTiles / 2) {
@@ -351,8 +352,16 @@ public class Server {
                     }
                 } else {
                     out2.writeObject(Action.sendAction.LOCK);
+                    out1.writeObject(Action.sendAction.UNLOCK);
+
+
+                    Thread.sleep(1000);
+                    out2.writeObject(Action.sendAction.LOCK);
+
+
                     break;
                 }
+                out1.writeObject(flip2);
 
             }
 
@@ -360,15 +369,8 @@ public class Server {
             if (correctSelections == totalTiles / 2) {
                 out1.writeObject(Action.sendAction.LOCK);
                 out2.writeObject(Action.sendAction.LOCK);
-                return;
-            } else {
-                System.out.println("NO WIN YET");
-                System.out.println(totalTiles);
+
             }
-
-            out2.writeObject(Action.sendAction.LOCK);
-            out1.writeObject(Action.sendAction.UNLOCK);
-
     }
 
 
@@ -376,7 +378,7 @@ public class Server {
 
 
 //Spelare 1
-        while (running) {
+        while (true) {
             Object flip1 = in1.readObject();
             //Första klicket
             out2.writeObject(flip1);
@@ -396,13 +398,17 @@ public class Server {
 
                 correctSelections++;
                 //totala poäng, jämförs med totala mängden som finns att vinna
-                System.out.println(correctSelections + " " + "correct selection");
 
                 out1.writeObject(new Score(player1Score, player2Score));
                 out2.writeObject(new Score(player2Score, player1Score));
+
+
                 nextScore = 5;
                 break;
-            } else {
+            } else {Timer t = new Timer(1000, e -> {});
+
+                t.setRepeats(false);
+                t.start();
                 if (nextScore > 1) {
                     nextScore--;
                 }
@@ -424,7 +430,7 @@ public class Server {
 
         //HÄR BYTER SPELAREN
 
-        while (running) {
+        while (true) {
             Object flip1 = in2.readObject();
             out1.writeObject(flip1);
 
@@ -438,9 +444,12 @@ public class Server {
                 System.out.println(correctSelections + " " + "correct selection");
                 out1.writeObject(new Score(player1Score, player2Score));
                 out2.writeObject(new Score(player2Score, player1Score));
+
+
                 nextScore = 5;
                 break;
             } else {
+                Timer t = new Timer(1000, e -> {});
                 if (nextScore > 1) {
                     nextScore--;
                 }
@@ -468,11 +477,6 @@ public class Server {
         Collections.shuffle(cardList);
     }
 
-
-    void main() {
-        new Server();
-
-    }
 
 
 }

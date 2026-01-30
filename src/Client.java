@@ -46,40 +46,45 @@ public class Client {
         running = false;
         try {
             if (gameSocket != null)
-            {gameSocket.close();} else {
-                System.out.println("Gamesocket was not closed");}
-            if (chatSocket != null) {chatSocket.close();} else {
-            System.out.println("chatSocket was not closed");}
-            if (gameOut != null) {gameOut.close();} else {
-            System.out.println("game out was not closed");}
-            if (gameIn != null) {gameIn.close();} else {
-            System.out.println("game in was not closed");}
-            if (chatOut != null) {chatOut.close();} else {
-            System.out.println("chat out was not closed");}
-            if (chatIn != null) {chatIn.close();} else {
-            System.out.println("chat in was not closed");}
-        } catch (IOException e) {
+            {gameSocket.close();}
+            if (chatSocket != null) {chatSocket.close();}
+            if (gameOut != null) {gameOut.close();}
+            if (gameIn != null) {gameIn.close();}
+            if (chatOut != null) {chatOut.close();}
+            if (chatIn != null) {chatIn.close();}
+        } catch (IOException ignored) {
 
         }
 
         if (listenLoop != null) {
             listenLoop.interrupt();
-        } else {
-            System.out.println("listenloop was not interrupted");}
+            listenLoop=null;
+
         if (chatLoop != null) {
             chatLoop.interrupt();
-        } else {
-            System.out.println("chatloop was not interrupted");
+            chatLoop = null;
+        }
         }
 
     }
+
+    /*public void connectThread(){
+        new Thread (() -> {
+                try {
+            connect(hostname);
+        } catch (Exception e) {e.printStackTrace();}
+        }).start();
+    }
+    */
 
     public void connect() {
         running = true;
 
         try {
             gameSocket = new Socket(hostname, port);
+
             chatSocket = new Socket(hostname, chatPort);
+
 
             this.gameOut = new ObjectOutputStream(gameSocket.getOutputStream());
             this.chatOut = new ObjectOutputStream(chatSocket.getOutputStream());
@@ -95,25 +100,24 @@ public class Client {
                     try {
                         SwingUtilities.invokeLater(() -> {
                             gui.otherPlayerDisconnected();
-                            System.out.println("EOFEXCEPTION");
+
                         });
                     } catch (Exception ignored) {
 
                     }
-                } catch (SocketException s) {
-                    disconnect();
-                    System.out.println("SOCKET EXCEPTION: SOCKET CLOSED");
+                } catch (SocketException ignored) {
+
                 } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             });
-            listenLoop.setDaemon(true);
+
 
             chatLoop = new Thread(() -> {
                 try {
                     chatLoop(chatIn);
-                } catch (SocketException f) {
-                    System.out.println("Socket Exception in chat " + f);
+                } catch (SocketException ignored) {
+
                 } catch (IOException | ClassNotFoundException e) {
                     if(!running) {
                         throw new RuntimeException(e);
@@ -121,14 +125,14 @@ public class Client {
                 }
             });
 
-            chatLoop.setDaemon(true);
+
 
             listenLoop.start();
             chatLoop.start();
 
 
         } catch (IOException e) {
-            System.out.println("GAME CLOSING...");
+            e.printStackTrace();
         }
     }
 
@@ -181,7 +185,6 @@ public class Client {
                 gui.flipTile(gui.buttonList.get(index), index, true);
             }
             if (msg instanceof Action.sendAction action) {
-                System.out.println(action);
                 switch (action) {
                     case LOCK -> {
                         GUI.buttonLock = true;
@@ -200,11 +203,10 @@ public class Client {
                     case RESET -> gui.resetGame();
                     case DISABLE -> {
                         gui.disableButtons(true);
-                        System.out.println("DISABLED CORRECTLY");
                     }
                     case OTHERDISCONNECT -> {
                         gui.otherPlayerDisconnected();
-                        System.out.println("Server sent: OTHERDISCONNECT");
+
                     }
                 }
             }
@@ -221,7 +223,6 @@ public class Client {
                 p2Score = score.getP2Score();
             }
         }
-        System.out.println("LISTENLOOP EXITED CORRECTLY");
     }
 
     public void chatLoop(ObjectInputStream in) throws IOException, ClassNotFoundException {
@@ -231,22 +232,20 @@ public class Client {
 
                 if (msg instanceof Message) {
                     String chatMessage = ((Message) msg).getChatMessage();
-                    System.out.println(chatMessage);
                     gui.chat.append(chatMessage);
                 }
             }
-        }catch (SocketException | EOFException f){
-            System.out.println("ERROR" + f);
-            return;
+        }catch (SocketException | EOFException ignored){
+
         }
-        System.out.println("CHATLOOP EXITED CORRECTLY");
     }
 
     public void sendOb(Object o) throws IOException {
         if (gameOut != null) {
             gameOut.writeObject(o);
         } else {
-            System.out.println("GAMEOUT WAS NULL");
+            JOptionPane.showMessageDialog(null, "Server not found, IP may be incorrect");
+            gui.enterUser();
         }
     }
 
