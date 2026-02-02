@@ -19,7 +19,8 @@ public class GUI extends JFrame implements ActionListener {
     int correctSelections = 0;
     boolean first = true;
     int currentIndex = -1;
-    static boolean buttonLock = false;
+    boolean buttonLock = false;
+    static boolean lock = false;
     private Client client;
     JLabel scoreText = new JLabel("<html> P1: 0 points<br> P2: 0 points<html> ");
     JTextArea chat = new JTextArea();
@@ -169,7 +170,7 @@ public class GUI extends JFrame implements ActionListener {
     }
 
     public void clickButton(JButton button, int index) throws InterruptedException, IOException {
-        if (!buttonLock) {
+        if (!buttonLock && !lock) {
             if (first) {
                 //"Reveals" the text of the first button
                 setButtonSymbolText(button, index);

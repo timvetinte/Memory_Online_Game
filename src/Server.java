@@ -194,7 +194,9 @@ public class Server {
 
 
                 out1.writeObject(Action.sendAction.LOCK);
+                System.out.println("Lock 1 player1");
                 out2.writeObject(Action.sendAction.LOCK);
+                System.out.println("Lock 1 player2");
 
                 if (firstGame) {
 
@@ -210,7 +212,9 @@ public class Server {
                     firstGame = false;
                 }
                 out1.writeObject(Action.sendAction.UNLOCK);
+                System.out.println("UnLock 1 player1");
                 out2.writeObject(Action.sendAction.LOCK);
+                System.out.println("UnLock 1 player2");
 
 
                 while (correctSelections < totalTiles / 2) {
@@ -312,9 +316,12 @@ public class Server {
 
             } else {
                 out1.writeObject(Action.sendAction.LOCK);
+                System.out.println("Lock 2 player1");
                 out2.writeObject(Action.sendAction.UNLOCK);
+                System.out.println("UnLock 2 player2");
                 Thread.sleep(1000);
                 out1.writeObject(Action.sendAction.LOCK);
+                System.out.println("Lock 3 player1");
 
                 break;
             }
@@ -352,11 +359,14 @@ public class Server {
                     }
                 } else {
                     out2.writeObject(Action.sendAction.LOCK);
+                    System.out.println("Lock 4 player2");
                     out1.writeObject(Action.sendAction.UNLOCK);
+                    System.out.println("UnLock 3 player1");
 
 
                     Thread.sleep(1000);
                     out2.writeObject(Action.sendAction.LOCK);
+                    System.out.println("Lock 5 player2");
 
 
                     break;
@@ -425,7 +435,9 @@ public class Server {
         }
 
         out1.writeObject(Action.sendAction.LOCK);
+        System.out.println("Lock 6 player1");
         out2.writeObject(Action.sendAction.UNLOCK);
+        System.out.println("UnLock 4 player2");
 
 
         //HÄR BYTER SPELAREN
@@ -466,7 +478,9 @@ public class Server {
         }
 
         out2.writeObject(Action.sendAction.LOCK);
+        System.out.println("Lock 7 player2");
         out1.writeObject(Action.sendAction.UNLOCK);
+        System.out.println("UnLock '5 player1");
     }
 
 

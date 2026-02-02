@@ -187,13 +187,13 @@ public class Client {
             if (msg instanceof Action.sendAction action) {
                 switch (action) {
                     case LOCK -> {
-                        GUI.buttonLock = true;
+                        GUI.lock = true;
                         gui.sideBar.setBackground(null);
                         gui.scoreText.setForeground(Color.BLACK);
                     }
                     case UNLOCK -> {
 
-                        GUI.buttonLock = false;
+                        GUI.lock = false;
                         gui.sideBar.setBackground(Color.ORANGE);
                         gui.scoreText.setForeground(Color.WHITE);
                     }
