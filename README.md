@@ -1,9 +1,9 @@
-# Memory Game
+# Online Memory Game
 
 A simple online memory game where the player flips cards and tries to find matching pairs against another player.
 
 
-![MemorySC](githubscreen.png)
+<img src="screenshot.png" alt="MemorySC" width="600">
 
 
 ## How It Works
@@ -19,7 +19,8 @@ A simple online memory game where the player flips cards and tries to find match
 - Three difficulty options
 - Turn-based card flipping
 - Chat functionality with usernames
-- Basic win condition  
+- Basic win condition
+- Very small file size
 
 ## Technologies
 - Language: Java  
