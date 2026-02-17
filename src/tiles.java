@@ -25,14 +25,14 @@ public class tiles implements Serializable {
             case 12: return "℮";
             case 13: return "℧";
             case 14: return "♥";
-            case 15: return "⌼";
-            case 16: return "⍬";
+            case 15: return "☼";
+            case 16: return "⌼";
             case 17: return "▣";
-            case 18: return "☃";
-            case 19: return "☏";
-            case 20: return "☠";
+            case 18: return "↯";
+            case 19: return "⏻";
+            case 20: return "〠";
             case 21: return "☢";
-            case 22: return "☣";
+            case 22: return "■";
             case 23: return "☺";
             case 24: return "♚";
             case 25: return "♣";
@@ -40,9 +40,9 @@ public class tiles implements Serializable {
             case 27: return "◒";
             case 28: return "☁";
             case 29: return "★";
-            case 30: return "☂";
+            case 30: return "⛛";
             case 31: return "◎";
-            case 32: return "☼";
+            case 32: return "⍬";
             default: return "?";
         }
     }

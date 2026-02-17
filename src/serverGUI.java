@@ -121,6 +121,7 @@ public class serverGUI {
             centerPanel.revalidate();
             buttonPanel.revalidate();
             buttonPanel.repaint();
+            serverWindow.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 
             new Thread(() -> server.set(new Server())).start();
 
@@ -160,6 +161,7 @@ public class serverGUI {
             serverWindow.repaint();
             buttonPanel.revalidate();
             buttonPanel.repaint();
+            serverWindow.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         });
     }
 }
